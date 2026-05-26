@@ -1,0 +1,131 @@
+"use client";
+
+import { useState } from "react";
+import { Kandidaat } from "@/lib/types";
+import { generateMailchimpHtml } from "@/lib/email-template";
+
+interface Props {
+  kandidaten: Kandidaat[];
+  onVerwijder: (id: string) => void;
+}
+
+export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
+  const [preview, setPreview] = useState(false);
+  const [versturen, setVersturen] = useState(false);
+  const [bericht, setBericht] = useState("");
+  const [fout, setFout] = useState("");
+
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_BASE_URL || "";
+
+  const previewHtml = kandidaten.length > 0 ? generateMailchimpHtml(kandidaten, baseUrl) : "";
+
+  async function verstuurMailing() {
+    setVersturen(true);
+    setFout("");
+    setBericht("");
+    try {
+      const res = await fetch("/api/send-mailchimp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kandidaten }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Fout bij versturen");
+      setBericht(`Mailing succesvol verstuurd! Onderwerp: "${data.onderwerp}"`);
+    } catch (err) {
+      setFout(err instanceof Error ? err.message : "Fout bij versturen");
+    } finally {
+      setVersturen(false);
+    }
+  }
+
+  const maandJaar = new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Huidige mailing</h2>
+          <p className="text-sm text-gray-500 mt-0.5">{maandJaar} &bull; {kandidaten.length} kandidaat{kandidaten.length !== 1 ? "en" : ""}</p>
+        </div>
+        <div className="flex gap-2">
+          {kandidaten.length > 0 && (
+            <>
+              <button
+                onClick={() => setPreview(!preview)}
+                className="px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+              >
+                {preview ? "Sluit preview" : "Preview mail"}
+              </button>
+              <button
+                onClick={verstuurMailing}
+                disabled={versturen}
+                className="px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
+                style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
+              >
+                {versturen ? "Versturen..." : "Verstuur via Mailchimp"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {bericht && (
+        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+          {bericht}
+        </div>
+      )}
+      {fout && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {fout}
+        </div>
+      )}
+
+      {kandidaten.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <div className="text-4xl mb-3">📋</div>
+          <p className="text-sm">Nog geen kandidaten toegevoegd aan de mailing</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {kandidaten.map((k) => (
+            <div key={k.id} className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-gray-800">{k.neepnaam}</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{k.categorie}</span>
+                </div>
+                <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} uur &bull; €{k.salaris},- ({k.type})</p>
+                {k.functies.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1">{k.functies.join(", ")}</p>
+                )}
+              </div>
+              <button
+                onClick={() => onVerwijder(k.id)}
+                className="ml-4 text-red-400 hover:text-red-600 text-xs font-medium transition shrink-0"
+              >
+                Verwijder
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {preview && kandidaten.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-semibold text-gray-700 mb-3 text-sm">E-mail preview</h3>
+          <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ height: "600px" }}>
+            <iframe
+              srcDoc={previewHtml}
+              className="w-full h-full"
+              title="Mailing preview"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

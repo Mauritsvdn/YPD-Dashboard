@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ypd-purple: #7B3FA0;
+  --ypd-pink: #E8547A;
+  --ypd-orange: #E8823A;
+  --ypd-yellow: #F5A623;
+}
