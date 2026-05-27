@@ -17,6 +17,12 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
   const [bericht, setBericht] = useState("");
   const [fout, setFout] = useState("");
 
+  // Testmail
+  const [testModus, setTestModus] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testVersturen, setTestVersturen] = useState(false);
+  const [testBericht, setTestBericht] = useState("");
+
   const baseUrl =
     typeof window !== "undefined"
       ? window.location.origin
@@ -25,6 +31,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
   const previewHtml = kandidaten.length > 0 ? generateMailchimpHtml(kandidaten, baseUrl) : "";
 
   async function verstuurMailing() {
+    if (!confirm("Weet je zeker dat je de mailing naar de hele lijst wilt versturen?")) return;
     setVersturen(true);
     setFout("");
     setBericht("");
@@ -36,12 +43,35 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
-      setBericht(`Mailing succesvol verstuurd! Onderwerp: "${data.onderwerp}"`);
+      setBericht(`✓ Mailing verstuurd! Onderwerp: "${data.onderwerp}"`);
       onVerstuurd();
     } catch (err) {
       setFout(err instanceof Error ? err.message : "Fout bij versturen");
     } finally {
       setVersturen(false);
+    }
+  }
+
+  async function verstuurTestmail(e: React.FormEvent) {
+    e.preventDefault();
+    setTestVersturen(true);
+    setTestBericht("");
+    setFout("");
+    try {
+      const res = await fetch("/api/test-mailchimp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kandidaten, testEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Fout bij versturen");
+      setTestBericht(`✓ Testmail verstuurd naar ${testEmail}`);
+      setTestModus(false);
+      setTestEmail("");
+    } catch (err) {
+      setFout(err instanceof Error ? err.message : "Fout bij versturen testmail");
+    } finally {
+      setTestVersturen(false);
     }
   }
 
@@ -56,28 +86,68 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
             {maandJaar} &bull; {laden ? "laden..." : `${kandidaten.length} kandidaat${kandidaten.length !== 1 ? "en" : ""}`}
           </p>
         </div>
-        <div className="flex gap-2">
-          {!laden && kandidaten.length > 0 && (
-            <>
-              <button
-                onClick={() => setPreview(!preview)}
-                className="px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
-              >
-                {preview ? "Sluit preview" : "Preview mail"}
-              </button>
-              <button
-                onClick={verstuurMailing}
-                disabled={versturen}
-                className="px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
-                style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
-              >
-                {versturen ? "Versturen..." : "Verstuur via Mailchimp"}
-              </button>
-            </>
-          )}
-        </div>
+        {!laden && kandidaten.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPreview(!preview)}
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+            >
+              {preview ? "Sluit preview" : "Preview mail"}
+            </button>
+            <button
+              onClick={() => { setTestModus(!testModus); setFout(""); setTestBericht(""); }}
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+            >
+              Stuur testmail
+            </button>
+            <button
+              onClick={verstuurMailing}
+              disabled={versturen}
+              className="px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
+              style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
+            >
+              {versturen ? "Versturen..." : "Verstuur naar lijst"}
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Testmail formulier */}
+      {testModus && (
+        <form onSubmit={verstuurTestmail} className="mb-4 flex gap-3 items-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <span className="text-sm text-gray-600 shrink-0">Stuur testmail naar:</span>
+          <input
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            placeholder="jouw@email.nl"
+            required
+            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          <button
+            type="submit"
+            disabled={testVersturen}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 shrink-0"
+            style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
+          >
+            {testVersturen ? "Versturen..." : "Verstuur"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTestModus(false)}
+            className="text-gray-400 hover:text-gray-600 text-sm transition"
+          >
+            ✕
+          </button>
+        </form>
+      )}
+
+      {/* Berichten */}
+      {testBericht && (
+        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+          {testBericht}
+        </div>
+      )}
       {bericht && (
         <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
           {bericht}
