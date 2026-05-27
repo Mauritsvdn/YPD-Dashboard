@@ -79,7 +79,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Huidige mailing</h2>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -87,23 +87,23 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
           </p>
         </div>
         {!laden && kandidaten.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setPreview(!preview)}
-              className="px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
             >
-              {preview ? "Sluit preview" : "Preview mail"}
+              {preview ? "Sluit preview" : "Preview"}
             </button>
             <button
               onClick={() => { setTestModus(!testModus); setFout(""); setTestBericht(""); }}
-              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
             >
-              Stuur testmail
+              Testmail
             </button>
             <button
               onClick={verstuurMailing}
               disabled={versturen}
-              className="px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
               style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
             >
               {versturen ? "Versturen..." : "Verstuur naar lijst"}
@@ -114,31 +114,29 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
 
       {/* Testmail formulier */}
       {testModus && (
-        <form onSubmit={verstuurTestmail} className="mb-4 flex gap-3 items-center p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <span className="text-sm text-gray-600 shrink-0">Stuur testmail naar:</span>
-          <input
-            type="email"
-            value={testEmail}
-            onChange={(e) => setTestEmail(e.target.value)}
-            placeholder="jouw@email.nl"
-            required
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-          />
-          <button
-            type="submit"
-            disabled={testVersturen}
-            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 shrink-0"
-            style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
-          >
-            {testVersturen ? "Versturen..." : "Verstuur"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTestModus(false)}
-            className="text-gray-400 hover:text-gray-600 text-sm transition"
-          >
-            ✕
-          </button>
+        <form onSubmit={verstuurTestmail} className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-gray-700">Stuur testmail naar:</span>
+            <button type="button" onClick={() => setTestModus(false)} className="text-gray-400 hover:text-gray-600 text-sm transition">✕</button>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="jouw@email.nl"
+              required
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <button
+              type="submit"
+              disabled={testVersturen}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 shrink-0"
+              style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
+            >
+              {testVersturen ? "..." : "Verstuur"}
+            </button>
+          </div>
         </form>
       )}
 
@@ -194,7 +192,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
       {preview && kandidaten.length > 0 && (
         <div className="mt-6">
           <h3 className="font-semibold text-gray-700 mb-3 text-sm">E-mail preview</h3>
-          <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ height: "600px" }}>
+          <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ height: "clamp(400px, 70vh, 600px)" }}>
             <iframe
               srcDoc={previewHtml}
               className="w-full h-full"

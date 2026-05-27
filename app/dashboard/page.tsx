@@ -114,13 +114,13 @@ export default function DashboardPage() {
       {/* Tabs */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4">
-          <nav className="flex gap-1">
+          <nav className="flex overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => !bulkBezig && setActieveTab(tab.id)}
                 disabled={bulkBezig && tab.id !== "kandidaat"}
-                className={`relative py-4 px-5 text-sm font-semibold transition border-b-2 ${
+                className={`shrink-0 relative py-3.5 px-4 text-xs sm:text-sm font-semibold transition border-b-2 whitespace-nowrap ${
                   actieveTab === tab.id
                     ? "border-purple-600 text-purple-700"
                     : "border-transparent text-gray-500 hover:text-gray-700"
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               >
                 {tab.label}
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full text-xs text-white font-bold" style={{ background: "linear-gradient(90deg, #E8547A, #9B59B6)" }}>
+                  <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full text-xs text-white font-bold" style={{ background: "linear-gradient(90deg, #E8547A, #9B59B6)" }}>
                     {tab.badge}
                   </span>
                 )}
@@ -139,14 +139,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Inhoud */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {actieveTab === "kandidaat" && (
           <div className="space-y-4">
             {/* Modus toggle */}
-            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-full sm:w-fit">
               <button
                 onClick={() => setKandidaatModus("bulk")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition ${
                   kandidaatModus === "bulk"
                     ? "bg-white text-purple-700 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -156,13 +156,13 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => setKandidaatModus("handmatig")}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition ${
                   kandidaatModus === "handmatig"
                     ? "bg-white text-purple-700 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                ➕ Handmatig toevoegen
+                ➕ Handmatig
               </button>
             </div>
 

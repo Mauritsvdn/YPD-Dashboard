@@ -101,7 +101,7 @@ export default function NieuweKandidaat({ onToevoegen }: Props) {
       <button
         onClick={genereerPitch}
         disabled={laden || (!bestand && !notities.trim())}
-        className="mt-4 px-6 py-2.5 rounded-xl text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-4 w-full sm:w-auto px-6 py-2.5 rounded-xl text-white font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
       >
         {laden ? "Pitch genereren..." : "Genereer pitch"}

@@ -95,7 +95,7 @@ export default function Gebruikers() {
           De collega ontvangt automatisch een welkomstmail met uitleg hoe ze kunnen inloggen.
         </p>
 
-        <form onSubmit={voegToe} className="flex gap-3">
+        <form onSubmit={voegToe} className="flex flex-col sm:flex-row gap-3">
           <input
             type="email"
             value={nieuweEmail}
@@ -107,7 +107,7 @@ export default function Gebruikers() {
           <button
             type="submit"
             disabled={toevoegen}
-            className="px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50 shrink-0"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
             style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
           >
             {toevoegen ? "Toevoegen..." : "Toevoegen"}
@@ -159,8 +159,8 @@ export default function Gebruikers() {
                   >
                     {initialen(g.email)}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{g.email}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{g.email}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       Laatste login: {formatDatum(g.last_sign_in_at)}
                     </p>

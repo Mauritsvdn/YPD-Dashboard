@@ -8,3 +8,12 @@
   --ypd-orange: #E8823A;
   --ypd-yellow: #F5A623;
 }
+
+/* Verberg scrollbar maar houdt scroll-functionaliteit (voor tab-balk op mobiel) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
