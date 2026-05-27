@@ -4,16 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Kandidaat } from "@/lib/types";
 import NieuweKandidaat from "@/components/NieuweKandidaat";
+import BulkImport from "@/components/BulkImport";
 import HuidigeMailing from "@/components/HuidigeMailing";
 import CvAanvragen from "@/components/CvAanvragen";
 import Gebruikers from "@/components/Gebruikers";
 
 type Tab = "kandidaat" | "mailing" | "aanvragen" | "beheer";
+type KandidaatModus = "bulk" | "handmatig";
 
 export default function DashboardPage() {
   const [kandidaten, setKandidaten] = useState<Kandidaat[]>([]);
   const [laden, setLaden] = useState(true);
   const [actieveTab, setActieveTab] = useState<Tab>("kandidaat");
+  const [kandidaatModus, setKandidaatModus] = useState<KandidaatModus>("bulk");
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +45,21 @@ export default function DashboardPage() {
       setKandidaten((prev) => [...prev, k]);
       setActieveTab("mailing");
     }
+  }
+
+  async function voegVeelToe(nieuweKandidaten: Kandidaat[]) {
+    // Sla alle kandidaten parallel op
+    await Promise.all(
+      nieuweKandidaten.map((k) =>
+        fetch("/api/kandidaten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(k),
+        })
+      )
+    );
+    setKandidaten((prev) => [...prev, ...nieuweKandidaten]);
+    setActieveTab("mailing");
   }
 
   async function verwijder(id: string) {
@@ -117,7 +135,37 @@ export default function DashboardPage() {
       {/* Inhoud */}
       <main className="max-w-5xl mx-auto px-4 py-8">
         {actieveTab === "kandidaat" && (
-          <NieuweKandidaat onToevoegen={voegToe} />
+          <div className="space-y-4">
+            {/* Modus toggle */}
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+              <button
+                onClick={() => setKandidaatModus("bulk")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  kandidaatModus === "bulk"
+                    ? "bg-white text-purple-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                📄 Maandelijks document
+              </button>
+              <button
+                onClick={() => setKandidaatModus("handmatig")}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  kandidaatModus === "handmatig"
+                    ? "bg-white text-purple-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                ➕ Handmatig toevoegen
+              </button>
+            </div>
+
+            {kandidaatModus === "bulk" ? (
+              <BulkImport onToevoegen={voegVeelToe} />
+            ) : (
+              <NieuweKandidaat onToevoegen={voegToe} />
+            )}
+          </div>
         )}
         {actieveTab === "mailing" && (
           <HuidigeMailing
