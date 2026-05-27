@@ -42,7 +42,7 @@ export default function LoginPage() {
     >
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD Logo" className="h-16" />
+          <img src="/ypd-logo.png" alt="YPD Logo" className="h-16" />
         </div>
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">Recruiter Dashboard</h1>
 
