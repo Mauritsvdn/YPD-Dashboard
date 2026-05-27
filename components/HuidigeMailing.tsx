@@ -6,10 +6,12 @@ import { generateMailchimpHtml } from "@/lib/email-template";
 
 interface Props {
   kandidaten: Kandidaat[];
+  laden: boolean;
   onVerwijder: (id: string) => void;
+  onVerstuurd: () => void;
 }
 
-export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
+export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerstuurd }: Props) {
   const [preview, setPreview] = useState(false);
   const [versturen, setVersturen] = useState(false);
   const [bericht, setBericht] = useState("");
@@ -35,6 +37,7 @@ export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
       setBericht(`Mailing succesvol verstuurd! Onderwerp: "${data.onderwerp}"`);
+      onVerstuurd();
     } catch (err) {
       setFout(err instanceof Error ? err.message : "Fout bij versturen");
     } finally {
@@ -49,10 +52,12 @@ export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Huidige mailing</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{maandJaar} &bull; {kandidaten.length} kandidaat{kandidaten.length !== 1 ? "en" : ""}</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {maandJaar} &bull; {laden ? "laden..." : `${kandidaten.length} kandidaat${kandidaten.length !== 1 ? "en" : ""}`}
+          </p>
         </div>
         <div className="flex gap-2">
-          {kandidaten.length > 0 && (
+          {!laden && kandidaten.length > 0 && (
             <>
               <button
                 onClick={() => setPreview(!preview)}
@@ -84,7 +89,9 @@ export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
         </div>
       )}
 
-      {kandidaten.length === 0 ? (
+      {laden ? (
+        <div className="text-center py-12 text-gray-400 text-sm">Laden...</div>
+      ) : kandidaten.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-4xl mb-3">📋</div>
           <p className="text-sm">Nog geen kandidaten toegevoegd aan de mailing</p>
@@ -98,7 +105,7 @@ export default function HuidigeMailing({ kandidaten, onVerwijder }: Props) {
                   <span className="font-semibold text-gray-800">{k.neepnaam}</span>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{k.categorie}</span>
                 </div>
-                <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} uur &bull; €{k.salaris},- ({k.type})</p>
+                <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} &bull; €{k.salaris},- ({k.type})</p>
                 {k.functies.length > 0 && (
                   <p className="text-xs text-gray-400 mt-1">{k.functies.join(", ")}</p>
                 )}

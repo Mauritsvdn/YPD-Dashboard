@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateMailchimpHtml } from "@/lib/email-template";
 import { Kandidaat } from "@/lib/types";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -69,6 +70,13 @@ export async function POST(request: Request) {
       const err = await sendRes.json().catch(() => ({}));
       throw new Error(`Mailchimp versturen mislukt: ${JSON.stringify(err)}`);
     }
+
+    // Markeer alle verstuurde kandidaten als gearchiveerd
+    const ids = kandidaten.map((k) => k.id);
+    await supabase
+      .from("kandidaten")
+      .update({ verstuurd_op: new Date().toISOString() })
+      .in("id", ids);
 
     return NextResponse.json({ ok: true, campaignId, onderwerp });
   } catch (err) {

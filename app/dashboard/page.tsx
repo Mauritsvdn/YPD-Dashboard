@@ -1,40 +1,59 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Kandidaat } from "@/lib/types";
 import NieuweKandidaat from "@/components/NieuweKandidaat";
 import HuidigeMailing from "@/components/HuidigeMailing";
 import CvAanvragen from "@/components/CvAanvragen";
 
-const STORAGE_KEY = "ypd_mailing_kandidaten";
-
 type Tab = "kandidaat" | "mailing" | "aanvragen";
 
 export default function DashboardPage() {
   const [kandidaten, setKandidaten] = useState<Kandidaat[]>([]);
+  const [laden, setLaden] = useState(true);
   const [actieveTab, setActieveTab] = useState<Tab>("kandidaat");
   const router = useRouter();
 
+  // Laad kandidaten uit Supabase bij opstarten
   useEffect(() => {
-    try {
-      const opgeslagen = localStorage.getItem(STORAGE_KEY);
-      if (opgeslagen) setKandidaten(JSON.parse(opgeslagen));
-    } catch {}
+    async function laadKandidaten() {
+      try {
+        const res = await fetch("/api/kandidaten");
+        if (!res.ok) throw new Error("Fout bij laden");
+        const data = await res.json();
+        setKandidaten(data);
+      } catch {
+        console.error("Kon kandidaten niet laden");
+      } finally {
+        setLaden(false);
+      }
+    }
+    laadKandidaten();
   }, []);
 
-  const slaOp = useCallback((lijst: Kandidaat[]) => {
-    setKandidaten(lijst);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lijst));
-  }, []);
-
-  function voegToe(k: Kandidaat) {
-    slaOp([...kandidaten, k]);
-    setActieveTab("mailing");
+  async function voegToe(k: Kandidaat) {
+    const res = await fetch("/api/kandidaten", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(k),
+    });
+    if (res.ok) {
+      setKandidaten((prev) => [...prev, k]);
+      setActieveTab("mailing");
+    }
   }
 
-  function verwijder(id: string) {
-    slaOp(kandidaten.filter((k) => k.id !== id));
+  async function verwijder(id: string) {
+    const res = await fetch(`/api/kandidaten/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setKandidaten((prev) => prev.filter((k) => k.id !== id));
+    }
+  }
+
+  // Na verzenden worden kandidaten gearchiveerd — verwijder ze uit de lijst
+  function onVerstuurd() {
+    setKandidaten([]);
   }
 
   async function uitloggen() {
@@ -101,7 +120,12 @@ export default function DashboardPage() {
           <NieuweKandidaat onToevoegen={voegToe} />
         )}
         {actieveTab === "mailing" && (
-          <HuidigeMailing kandidaten={kandidaten} onVerwijder={verwijder} />
+          <HuidigeMailing
+            kandidaten={kandidaten}
+            laden={laden}
+            onVerwijder={verwijder}
+            onVerstuurd={onVerstuurd}
+          />
         )}
         {actieveTab === "aanvragen" && (
           <CvAanvragen />
