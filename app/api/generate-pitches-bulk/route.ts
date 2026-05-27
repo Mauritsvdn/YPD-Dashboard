@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { CATEGORIEEN } from "@/lib/types";
 
+export const maxDuration = 300; // Vercel Pro: max 5 minuten
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 async function parsePdf(buffer: Buffer): Promise<string> {
@@ -88,7 +90,7 @@ Per kandidaat geef je exact dit JSON-object terug:
 Geef ALLEEN een JSON-array terug met alle gevonden kandidaten. Geen andere tekst, geen uitleg, geen markdown.`;
 
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 8096,
       messages: [
         {

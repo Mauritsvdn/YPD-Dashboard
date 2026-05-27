@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Kandidaat } from "@/lib/types";
 import { nanoid } from "@/lib/nanoid";
 
@@ -16,6 +16,17 @@ export default function BulkImport({ onToevoegen }: Props) {
   const [fout, setFout] = useState("");
   const [resultaat, setResultaat] = useState<{ aantal: number; categorieen: string[] } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Blokkeer browser-navigatie terwijl verwerking bezig is
+  useEffect(() => {
+    if (status !== "laden") return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "De verwerking is nog bezig. Weet je zeker dat je de pagina wil verlaten?";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [status]);
 
   async function verwerkEnVoegToe() {
     if (!bestand) return;
@@ -81,7 +92,7 @@ export default function BulkImport({ onToevoegen }: Props) {
           {status === "laden" ? (
             <>
               <p className="font-semibold text-gray-600 text-sm">Kandidaten worden geëxtraheerd…</p>
-              <p className="text-xs text-gray-400 mt-1">Dit kan 15–30 seconden duren</p>
+              <p className="text-xs text-gray-400 mt-1">Blijf op deze pagina — dit duurt ongeveer 20 seconden</p>
             </>
           ) : bestand ? (
             <>

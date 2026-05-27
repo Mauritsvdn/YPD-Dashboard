@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [laden, setLaden] = useState(true);
   const [actieveTab, setActieveTab] = useState<Tab>("kandidaat");
   const [kandidaatModus, setKandidaatModus] = useState<KandidaatModus>("bulk");
+  const [bulkBezig, setBulkBezig] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,18 +49,22 @@ export default function DashboardPage() {
   }
 
   async function voegVeelToe(nieuweKandidaten: Kandidaat[]) {
-    // Sla alle kandidaten parallel op
-    await Promise.all(
-      nieuweKandidaten.map((k) =>
-        fetch("/api/kandidaten", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(k),
-        })
-      )
-    );
-    setKandidaten((prev) => [...prev, ...nieuweKandidaten]);
-    setActieveTab("mailing");
+    setBulkBezig(true);
+    try {
+      await Promise.all(
+        nieuweKandidaten.map((k) =>
+          fetch("/api/kandidaten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(k),
+          })
+        )
+      );
+      setKandidaten((prev) => [...prev, ...nieuweKandidaten]);
+      setActieveTab("mailing");
+    } finally {
+      setBulkBezig(false);
+    }
   }
 
   async function verwijder(id: string) {
@@ -113,7 +118,8 @@ export default function DashboardPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActieveTab(tab.id)}
+                onClick={() => !bulkBezig && setActieveTab(tab.id)}
+                disabled={bulkBezig && tab.id !== "kandidaat"}
                 className={`relative py-4 px-5 text-sm font-semibold transition border-b-2 ${
                   actieveTab === tab.id
                     ? "border-purple-600 text-purple-700"
