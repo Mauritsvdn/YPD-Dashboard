@@ -6,8 +6,9 @@ import { Kandidaat } from "@/lib/types";
 import NieuweKandidaat from "@/components/NieuweKandidaat";
 import HuidigeMailing from "@/components/HuidigeMailing";
 import CvAanvragen from "@/components/CvAanvragen";
+import Gebruikers from "@/components/Gebruikers";
 
-type Tab = "kandidaat" | "mailing" | "aanvragen";
+type Tab = "kandidaat" | "mailing" | "aanvragen" | "beheer";
 
 export default function DashboardPage() {
   const [kandidaten, setKandidaten] = useState<Kandidaat[]>([]);
@@ -15,7 +16,6 @@ export default function DashboardPage() {
   const [actieveTab, setActieveTab] = useState<Tab>("kandidaat");
   const router = useRouter();
 
-  // Laad kandidaten uit Supabase bij opstarten
   useEffect(() => {
     async function laadKandidaten() {
       try {
@@ -51,7 +51,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Na verzenden worden kandidaten gearchiveerd — verwijder ze uit de lijst
   function onVerstuurd() {
     setKandidaten([]);
   }
@@ -65,6 +64,7 @@ export default function DashboardPage() {
     { id: "kandidaat", label: "Nieuwe kandidaat" },
     { id: "mailing", label: "Huidige mailing", badge: kandidaten.length || undefined },
     { id: "aanvragen", label: "CV-aanvragen" },
+    { id: "beheer", label: "Beheer" },
   ];
 
   return (
@@ -129,6 +129,9 @@ export default function DashboardPage() {
         )}
         {actieveTab === "aanvragen" && (
           <CvAanvragen />
+        )}
+        {actieveTab === "beheer" && (
+          <Gebruikers />
         )}
       </main>
     </div>
