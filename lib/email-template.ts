@@ -6,8 +6,9 @@ const PINK = "#E8547A";
 const GRADIENT = `linear-gradient(90deg, ${PURPLE}, ${PINK}, #E8823A, #F5A623)`;
 
 /** Formatteert het salarisbedrag. Puur getal → "€4.500,-", anders ongewijzigd (met € prefix). */
-function formatSalaris(salaris: string): string {
-  const trimmed = salaris.trim();
+function formatSalaris(salaris: string | null | undefined): string {
+  const trimmed = (salaris ?? "").trim();
+  if (!trimmed) return "";
   if (/^\d+$/.test(trimmed)) {
     return `€${parseInt(trimmed, 10).toLocaleString("nl-NL")},-`;
   }
@@ -38,8 +39,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
           const cvUrl = `${baseUrl}/cv-aanvragen?kandidaat=${encodeURIComponent(k.neepnaam)}&email=*|EMAIL|*`;
 
           const salarisFormatted = formatSalaris(k.salaris);
-          // Voeg "bruto/maand" toe als het puur een getal was
-          const salarisDisplay = /^\d+$/.test(k.salaris.trim())
+          const salarisDisplay = /^\d+$/.test((k.salaris ?? "").trim())
             ? `${salarisFormatted} bruto/maand`
             : salarisFormatted;
 

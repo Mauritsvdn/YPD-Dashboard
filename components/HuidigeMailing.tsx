@@ -28,7 +28,14 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
       ? window.location.origin
       : process.env.NEXT_PUBLIC_BASE_URL || "";
 
-  const previewHtml = kandidaten.length > 0 ? generateMailchimpHtml(kandidaten, baseUrl) : "";
+  let previewHtml = "";
+  if (kandidaten.length > 0) {
+    try {
+      previewHtml = generateMailchimpHtml(kandidaten, baseUrl);
+    } catch {
+      previewHtml = "<p style='padding:2rem;color:red'>Fout bij genereren preview.</p>";
+    }
+  }
 
   async function verstuurMailing() {
     if (!confirm("Weet je zeker dat je de mailing naar de hele lijst wilt versturen?")) return;
@@ -87,23 +94,23 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
           </p>
         </div>
         {!laden && kandidaten.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
             <button
               onClick={() => setPreview(!preview)}
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 transition"
             >
               {preview ? "Sluit preview" : "Preview"}
             </button>
             <button
               onClick={() => { setTestModus(!testModus); setFout(""); setTestBericht(""); }}
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
             >
               Testmail
             </button>
             <button
               onClick={verstuurMailing}
               disabled={versturen}
-              className="w-full sm:w-auto px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
+              className="col-span-2 sm:col-span-1 px-4 py-2 rounded-xl text-white text-sm font-semibold transition disabled:opacity-50"
               style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
             >
               {versturen ? "Versturen..." : "Verstuur naar lijst"}
