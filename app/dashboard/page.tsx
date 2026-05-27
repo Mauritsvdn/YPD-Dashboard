@@ -73,7 +73,7 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-10 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD" className="h-8" />
+            <img src="/ypd-logo.png" alt="YPD" className="h-8" />
             <span className="font-semibold text-gray-700 text-sm hidden sm:block">Recruiter Dashboard</span>
           </div>
           <button

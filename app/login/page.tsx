@@ -33,7 +33,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7B3FA0 0%, #E8823A 60%, #F5A623 100%)" }}>
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD Logo" className="h-16" />
+          <img src="/ypd-logo.png" alt="YPD Logo" className="h-16" />
         </div>
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">Recruiter Dashboard</h1>
         <p className="text-center text-gray-500 mb-8 text-sm">Log in om door te gaan</p>
