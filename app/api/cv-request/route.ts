@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     await resend.emails.send({
       from: "YPD Dashboard <noreply@ypd.nl>",
       to: "info@ypd.nl",
-      subject: `CV-aanvraag: ${kandidaat}`,
-      html: `<p><strong>${email}</strong> wil het cv ontvangen van kandidaat <strong>${kandidaat}</strong>.</p><p>Datum: ${new Date().toLocaleString("nl-NL")}</p>`,
+      subject: `📥 CV-aanvraag: ${kandidaat}`,
+      html: interneNotificatieHtml(kandidaat, email),
     });
 
     // Bevestigingsmail naar de aanvrager
@@ -55,6 +55,94 @@ export async function GET(request: Request) {
       { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 500 }
     );
   }
+}
+
+function interneNotificatieHtml(kandidaat: string, aanvrager: string): string {
+  const datum = new Date().toLocaleString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CV-aanvraag – YPD Dashboard</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#7B3FA0 0%,#E8823A 60%,#F5A623 100%);border-radius:16px 16px 0 0;padding:24px 40px;text-align:center;">
+              <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD" height="32" style="filter:brightness(0) invert(1);margin-bottom:8px;" />
+              <p style="color:rgba(255,255,255,0.9);font-size:12px;margin:0;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Recruiter Dashboard · Interne melding</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="background:#fff;padding:36px 40px;border-radius:0 0 16px 16px;">
+
+              <!-- Titel -->
+              <p style="font-size:22px;margin:0 0 24px 0;">📥</p>
+              <h1 style="color:#1a1a1a;font-size:18px;font-weight:700;margin:0 0 6px 0;">Nieuwe CV-aanvraag</h1>
+              <p style="color:#888;font-size:13px;margin:0 0 28px 0;">${datum}</p>
+
+              <!-- Info blokken -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                <tr>
+                  <td style="background:#f9f6fc;border-left:3px solid #7B3FA0;border-radius:0 8px 8px 0;padding:14px 18px;">
+                    <p style="color:#7B3FA0;font-size:11px;font-weight:700;margin:0 0 3px 0;text-transform:uppercase;letter-spacing:0.5px;">Kandidaat</p>
+                    <p style="color:#1a1a1a;font-size:15px;font-weight:700;margin:0;">${kandidaat}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="background:#fdf6f8;border-left:3px solid #E8547A;border-radius:0 8px 8px 0;padding:14px 18px;">
+                    <p style="color:#E8547A;font-size:11px;font-weight:700;margin:0 0 3px 0;text-transform:uppercase;letter-spacing:0.5px;">Aangevraagd door</p>
+                    <p style="color:#1a1a1a;font-size:15px;font-weight:700;margin:0 0 2px 0;">${aanvrager}</p>
+                    <a href="mailto:${aanvrager}" style="color:#888;font-size:12px;text-decoration:none;">Stuur direct een e-mail →</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Actie -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
+                       style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;">
+                      Reageer op aanvraag →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <hr style="border:none;border-top:1px solid #f0f0f0;margin:28px 0 20px 0;" />
+              <p style="color:#bbb;font-size:11px;margin:0;text-align:center;">
+                YPD Recruiter Dashboard &bull; <a href="https://ypd-dashboard.vercel.app" style="color:#7B3FA0;text-decoration:none;">Bekijk dashboard</a>
+              </p>
+
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 function bevestigingsMailHtml(kandidaat: string): string {
