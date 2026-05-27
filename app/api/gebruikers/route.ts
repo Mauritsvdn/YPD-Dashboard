@@ -59,144 +59,120 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true, id: data.user?.id });
 }
 
+const LOGO_URL = "https://ypd-dashboard.vercel.app/ypd-logo.png";
+
 function welkomMailHtml(email: string, wachtwoordLink: string): string {
   return `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Welkom bij het YPD Dashboard</title>
+  <title>Welkom bij het YPD Recruiter Dashboard</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;">
-    <tr>
-      <td align="center" style="padding:40px 16px;">
-        <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+<body style="margin:0;padding:0;background:#f2f2f2;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f2f2f2">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:16px;overflow:hidden;">
 
-          <!-- HEADER -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#7B3FA0 0%,#E8823A 60%,#F5A623 100%);border-radius:16px 16px 0 0;padding:40px;text-align:center;">
-              <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD" height="44" style="filter:brightness(0) invert(1);margin-bottom:16px;" />
-              <p style="color:#fff;font-size:20px;font-weight:700;margin:0;letter-spacing:0.5px;">Welkom bij het Recruiter Dashboard</p>
-            </td>
-          </tr>
+        <!-- Header: wit met logo -->
+        <tr>
+          <td style="padding:28px 40px 20px 40px;text-align:center;border-bottom:1px solid #f5f5f5;">
+            <img src="${LOGO_URL}" alt="YPD" height="44" style="display:block;margin:0 auto;" />
+          </td>
+        </tr>
+        <tr><td style="height:4px;background:linear-gradient(90deg,#7B3FA0,#E8547A,#E8823A,#F5A623);"></td></tr>
+        <tr><td style="height:32px;"></td></tr>
 
-          <!-- BODY -->
-          <tr>
-            <td style="background:#fff;padding:40px;">
+        <!-- Welkom titel -->
+        <tr>
+          <td style="padding:0 40px 8px 40px;">
+            <h1 style="color:#1a1a1a;font-size:22px;font-weight:700;margin:0;">Welkom bij het Recruiter Dashboard</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <p style="color:#555;font-size:15px;line-height:1.7;margin:0;">
+              Je hebt toegang gekregen tot het YPD Recruiter Dashboard. Stel eerst je wachtwoord in om te beginnen.
+            </p>
+          </td>
+        </tr>
 
-              <p style="color:#1a1a1a;font-size:15px;line-height:1.7;margin:0 0 16px 0;">
-                Je hebt toegang gekregen tot het <strong>YPD Recruiter Dashboard</strong>. Via dit dashboard kun je:
-              </p>
+        <!-- Wat kun je doen -->
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6fc;border-radius:10px;">
+              <tr>
+                <td style="padding:20px 24px;">
+                  <p style="color:#7B3FA0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px 0;">Wat kun je doen</p>
+                  <table cellpadding="0" cellspacing="0">
+                    <tr><td style="padding:4px 0;color:#444;font-size:14px;">✓&nbsp;&nbsp;AI-gegenereerde kandidaatpitches aanmaken</td></tr>
+                    <tr><td style="padding:4px 0;color:#444;font-size:14px;">✓&nbsp;&nbsp;Maandelijkse mailings samenstellen en versturen</td></tr>
+                    <tr><td style="padding:4px 0;color:#444;font-size:14px;">✓&nbsp;&nbsp;CV-aanvragen van relaties bekijken en opvolgen</td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
 
-              <!-- Feature lijst -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
-                <tr>
-                  <td style="padding:6px 0;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="width:28px;vertical-align:top;padding-top:1px;">
-                          <span style="display:inline-block;width:20px;height:20px;background:linear-gradient(135deg,#7B3FA0,#E8547A);border-radius:50%;text-align:center;line-height:20px;font-size:11px;color:#fff;font-weight:700;">✓</span>
-                        </td>
-                        <td style="color:#444;font-size:14px;line-height:1.5;">Kandidaatprofielen aanmaken met AI-gegenereerde pitches</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:6px 0;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="width:28px;vertical-align:top;padding-top:1px;">
-                          <span style="display:inline-block;width:20px;height:20px;background:linear-gradient(135deg,#7B3FA0,#E8547A);border-radius:50%;text-align:center;line-height:20px;font-size:11px;color:#fff;font-weight:700;">✓</span>
-                        </td>
-                        <td style="color:#444;font-size:14px;line-height:1.5;">Maandelijkse mailings samenstellen en versturen via Mailchimp</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:6px 0;">
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="width:28px;vertical-align:top;padding-top:1px;">
-                          <span style="display:inline-block;width:20px;height:20px;background:linear-gradient(135deg,#7B3FA0,#E8547A);border-radius:50%;text-align:center;line-height:20px;font-size:11px;color:#fff;font-weight:700;">✓</span>
-                        </td>
-                        <td style="color:#444;font-size:14px;line-height:1.5;">CV-aanvragen van relaties bekijken en opvolgen</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+        <!-- Stappen -->
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <p style="color:#7B3FA0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px 0;">Zo ga je aan de slag</p>
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td style="padding:6px 0;">
+                  <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">1</span>
+                  <span style="color:#444;font-size:14px;vertical-align:middle;">Klik op de knop hieronder om je wachtwoord in te stellen</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;">
+                  <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">2</span>
+                  <span style="color:#444;font-size:14px;vertical-align:middle;">Log voortaan in op <a href="https://ypd-dashboard.vercel.app/login" style="color:#7B3FA0;font-weight:600;">ypd-dashboard.vercel.app</a></span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;">
+                  <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">3</span>
+                  <span style="color:#444;font-size:14px;vertical-align:middle;">E-mail: <strong>${email}</strong> + jouw wachtwoord</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
 
-              <!-- Stappen -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6fc;border-radius:12px;padding:24px;margin-bottom:28px;">
-                <tr>
-                  <td style="padding:24px;">
-                    <p style="color:#7B3FA0;font-size:13px;font-weight:700;margin:0 0 16px 0;text-transform:uppercase;letter-spacing:0.5px;">Zo ga je aan de slag</p>
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="padding:8px 0;vertical-align:top;">
-                          <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">1</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Klik op de knop hieronder om een wachtwoord in te stellen</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0;vertical-align:top;">
-                          <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">2</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Log voortaan in op <a href="https://ypd-dashboard.vercel.app/login" style="color:#7B3FA0;font-weight:600;">ypd-dashboard.vercel.app</a></span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0;vertical-align:top;">
-                          <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">3</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Vul in: <strong>${email}</strong> + jouw wachtwoord</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:8px 0;vertical-align:top;">
-                          <span style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">✓</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Je bent ingelogd!</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+        <!-- CTA knop -->
+        <tr>
+          <td style="padding:0 40px 8px 40px;" align="center">
+            <a href="${wachtwoordLink}"
+               style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:14px 36px;border-radius:25px;font-size:15px;font-weight:700;">
+              Stel wachtwoord in →
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 40px 32px 40px;text-align:center;">
+            <p style="color:#bbb;font-size:11px;margin:0;">Deze link is 24 uur geldig.</p>
+          </td>
+        </tr>
 
-              <!-- CTA knop -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
-                <tr>
-                  <td align="center">
-                    <a href="${wachtwoordLink}"
-                       style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;">
-                      Stel je wachtwoord in →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              <p style="color:#bbb;font-size:11px;text-align:center;margin:0 0 28px 0;">Deze link is 24 uur geldig.</p>
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px 28px 40px;border-top:1px solid #f5f5f5;text-align:center;">
+            <p style="color:#bbb;font-size:11px;margin:0;">
+              Vragen? <a href="mailto:info@ypd.nl" style="color:#7B3FA0;text-decoration:none;">info@ypd.nl</a>
+              &nbsp;·&nbsp; 088 80 10 200 &nbsp;·&nbsp;
+              <a href="https://ypd.nl" style="color:#7B3FA0;text-decoration:none;">ypd.nl</a>
+            </p>
+          </td>
+        </tr>
 
-              <hr style="border:none;border-top:1px solid #f0f0f0;margin:0 0 20px 0;" />
-              <p style="color:#bbb;font-size:11px;margin:0;text-align:center;">
-                Vragen? Stuur een e-mail naar <a href="mailto:info@ypd.nl" style="color:#7B3FA0;text-decoration:none;">info@ypd.nl</a> of bel <strong>088 80 10 200</strong><br>
-                <a href="https://ypd.nl" style="color:#7B3FA0;text-decoration:none;">ypd.nl</a> &bull; Visserijstraat 3-5, Enschede
-              </p>
-
-            </td>
-          </tr>
-
-          <!-- FOOTER -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#7B3FA0 0%,#E8823A 60%,#F5A623 100%);border-radius:0 0 16px 16px;padding:20px 40px;text-align:center;">
-              <img src="https://ypd.nl/wp-content/uploads/2025/05/ypd.svg" alt="YPD" height="28" style="filter:brightness(0) invert(1);" />
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
 </html>`;
 }
