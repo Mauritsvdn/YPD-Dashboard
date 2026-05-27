@@ -3,24 +3,44 @@ import { supabase } from "@/lib/supabase";
 
 const LOGO_URL = "https://ypd-dashboard.vercel.app/ypd-logo.png";
 
+// GET: redirect oude directe links naar het formulier
 export async function GET(request: Request) {
-  const { Resend } = await import("resend");
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const { searchParams } = new URL(request.url);
   const kandidaat = searchParams.get("kandidaat") || "";
   const email = searchParams.get("email") || "";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ypd-dashboard.vercel.app";
 
-  if (!kandidaat || !email) {
-    return new Response(bevestigingHtml("Ongeldige aanvraag", "Ontbrekende gegevens. Neem contact op met YPD."), {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-      status: 400,
-    });
-  }
+  const params = new URLSearchParams();
+  if (kandidaat) params.set("kandidaat", kandidaat);
+  if (email) params.set("email", email);
+
+  return Response.redirect(`${baseUrl}/cv-aanvragen?${params.toString()}`, 302);
+}
+
+// POST: verwerkt het aanvraagformulier (met telefoonnummer)
+export async function POST(request: Request) {
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
+    const body = await request.json();
+    const kandidaat: string = body.kandidaat || "";
+    const email: string = body.email || "";
+    const telefoonnummer: string = body.telefoonnummer || "";
+    const bedrijf: string = body.bedrijf || "";
+
+    if (!kandidaat || !email) {
+      return NextResponse.json({ error: "Kandidaat en e-mail zijn verplicht" }, { status: 400 });
+    }
+    if (!telefoonnummer) {
+      return NextResponse.json({ error: "Telefoonnummer is verplicht" }, { status: 400 });
+    }
+
     await supabase.from("cv_requests").insert({
       kandidaat_naam: kandidaat,
       aanvrager_email: email,
+      telefoonnummer,
+      bedrijf_naam: bedrijf || null,
     });
 
     // Notificatie naar YPD intern
@@ -28,7 +48,7 @@ export async function GET(request: Request) {
       from: "YPD Dashboard <noreply@ypd.nl>",
       to: "info@ypd.nl",
       subject: `📥 CV-aanvraag: ${kandidaat}`,
-      html: interneNotificatieHtml(kandidaat, email),
+      html: interneNotificatieHtml(kandidaat, email, telefoonnummer, bedrijf),
     });
 
     // Bevestigingsmail naar de aanvrager
@@ -39,28 +59,16 @@ export async function GET(request: Request) {
       html: bevestigingsMailHtml(kandidaat),
     });
 
-    return new Response(
-      bevestigingHtml(
-        "Bedankt voor uw aanvraag!",
-        `We hebben uw aanvraag voor het CV van <strong>${kandidaat}</strong> ontvangen. Een YPD-consultant neemt zo spoedig mogelijk contact met u op.`
-      ),
-      { headers: { "Content-Type": "text/html; charset=utf-8" } }
-    );
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("cv-request fout:", err);
-    return new Response(
-      bevestigingHtml(
-        "Er is iets misgegaan",
-        "Uw aanvraag kon niet worden verwerkt. Neem direct contact op via info@ypd.nl of 088 80 10 200."
-      ),
-      { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 500 }
-    );
+    return NextResponse.json({ error: "Fout bij verwerken aanvraag" }, { status: 500 });
   }
 }
 
 // ─── Interne notificatie → info@ypd.nl ────────────────────────────────────
 
-function interneNotificatieHtml(kandidaat: string, aanvrager: string): string {
+function interneNotificatieHtml(kandidaat: string, aanvrager: string, telefoonnummer: string, bedrijf: string): string {
   const datum = new Date().toLocaleString("nl-NL", {
     weekday: "long", day: "numeric", month: "long",
     year: "numeric", hour: "2-digit", minute: "2-digit",
@@ -110,8 +118,12 @@ function interneNotificatieHtml(kandidaat: string, aanvrager: string): string {
         <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #fde8ed;border-radius:10px;">
           <tr>
             <td style="padding:16px 20px;">
-              <p style="color:#E8547A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 4px 0;">Aangevraagd door</p>
-              <p style="color:#1a1a1a;font-size:16px;font-weight:700;margin:0 0 4px 0;">${aanvrager}</p>
+              <p style="color:#E8547A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px 0;">Aangevraagd door</p>
+              ${bedrijf ? `<p style="color:#1a1a1a;font-size:15px;font-weight:700;margin:0 0 2px 0;">${bedrijf}</p>` : ""}
+              <p style="color:#444;font-size:14px;margin:0 0 2px 0;">${aanvrager}</p>
+              <p style="margin:0 0 8px 0;">
+                <a href="tel:${telefoonnummer}" style="color:#7B3FA0;font-size:15px;font-weight:700;text-decoration:none;">📞 ${telefoonnummer}</a>
+              </p>
               <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
                  style="color:#888;font-size:13px;text-decoration:none;">Stuur een e-mail →</a>
             </td>
@@ -120,13 +132,25 @@ function interneNotificatieHtml(kandidaat: string, aanvrager: string): string {
       </td>
     </tr>
 
-    <!-- Knop -->
+    <!-- Knoppen: bellen + mailen -->
     <tr>
-      <td style="padding:0 40px 40px 40px;" align="center">
-        <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
-           style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:13px 32px;border-radius:25px;font-size:14px;font-weight:700;">
-          Reageer op aanvraag →
-        </a>
+      <td style="padding:0 40px 40px 40px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-right:8px;">
+              <a href="tel:${telefoonnummer}"
+                 style="display:block;text-align:center;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:13px 20px;border-radius:25px;font-size:14px;font-weight:700;">
+                📞 Bel aanvrager
+              </a>
+            </td>
+            <td style="padding-left:8px;">
+              <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
+                 style="display:block;text-align:center;background:#f3ecfa;color:#7B3FA0;text-decoration:none;padding:13px 20px;border-radius:25px;font-size:14px;font-weight:700;">
+                ✉️ Stuur e-mail
+              </a>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   `, "YPD Dashboard · Interne melding");

@@ -35,7 +35,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 
       const kandidaatCards = kands
         .map((k) => {
-          const cvUrl = `${baseUrl}/api/cv-request?kandidaat=${encodeURIComponent(k.neepnaam)}&email=*|EMAIL|*`;
+          const cvUrl = `${baseUrl}/cv-aanvragen?kandidaat=${encodeURIComponent(k.neepnaam)}&email=*|EMAIL|*`;
 
           const salarisFormatted = formatSalaris(k.salaris);
           // Voeg "bruto/maand" toe als het puur een getal was

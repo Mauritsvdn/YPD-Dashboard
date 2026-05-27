@@ -17,6 +17,8 @@ export interface CvRequest {
   id: string;
   kandidaat_naam: string;
   aanvrager_email: string;
+  telefoonnummer: string | null;
+  bedrijf_naam: string | null;
   created_at: string;
 }
 

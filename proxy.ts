@@ -36,7 +36,8 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/api/cv-request")
+    pathname.startsWith("/api/cv-request") ||
+    pathname.startsWith("/cv-aanvragen")
   ) {
     return response;
   }
