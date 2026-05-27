@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Kandidaat } from "@/lib/types";
 import { generateMailchimpHtml } from "@/lib/email-template";
 
@@ -22,6 +22,15 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
   const [testEmail, setTestEmail] = useState("");
   const [testVersturen, setTestVersturen] = useState(false);
   const [testBericht, setTestBericht] = useState("");
+
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  // Scroll naar preview zodra die opent
+  useEffect(() => {
+    if (preview && previewRef.current) {
+      previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [preview]);
 
   const baseUrl =
     typeof window !== "undefined"
@@ -197,7 +206,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
       )}
 
       {preview && kandidaten.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-6" ref={previewRef}>
           <h3 className="font-semibold text-gray-700 mb-3 text-sm">E-mail preview</h3>
           <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ height: "clamp(400px, 70vh, 600px)" }}>
             <iframe
