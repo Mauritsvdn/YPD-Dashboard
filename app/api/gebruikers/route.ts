@@ -35,19 +35,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: bericht }, { status: 400 });
   }
 
-  // Stuur branded welkomstmail via Resend
+  // Genereer een "stel wachtwoord in" link voor de nieuwe gebruiker
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://ypd-dashboard.vercel.app";
+  const { data: linkData } = await supabase.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: {
+      redirectTo: `${baseUrl}/auth/callback?next=/set-password`,
+    },
+  });
+
+  const wachtwoordLink = linkData?.properties?.action_link ?? `${baseUrl}/login`;
+
+  // Stuur branded welkomstmail met wachtwoord-instellen link
   const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({
     from: "YPD <noreply@ypd.nl>",
     to: email,
-    subject: "Welkom bij het YPD Recruiter Dashboard",
-    html: welkomMailHtml(email),
+    subject: "Welkom bij het YPD Recruiter Dashboard — stel je wachtwoord in",
+    html: welkomMailHtml(email, wachtwoordLink),
   });
 
   return NextResponse.json({ ok: true, id: data.user?.id });
 }
 
-function welkomMailHtml(email: string): string {
+function welkomMailHtml(email: string, wachtwoordLink: string): string {
   return `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -121,30 +133,30 @@ function welkomMailHtml(email: string): string {
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6fc;border-radius:12px;padding:24px;margin-bottom:28px;">
                 <tr>
                   <td style="padding:24px;">
-                    <p style="color:#7B3FA0;font-size:13px;font-weight:700;margin:0 0 16px 0;text-transform:uppercase;letter-spacing:0.5px;">Zo log je in</p>
+                    <p style="color:#7B3FA0;font-size:13px;font-weight:700;margin:0 0 16px 0;text-transform:uppercase;letter-spacing:0.5px;">Zo ga je aan de slag</p>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:8px 0;vertical-align:top;">
                           <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">1</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Ga naar <a href="https://ypd-dashboard.vercel.app/login" style="color:#7B3FA0;font-weight:600;">ypd-dashboard.vercel.app</a></span>
+                          <span style="color:#444;font-size:14px;vertical-align:middle;">Klik op de knop hieronder om een wachtwoord in te stellen</span>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:8px 0;vertical-align:top;">
                           <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">2</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Vul je e-mailadres in: <strong>${email}</strong></span>
+                          <span style="color:#444;font-size:14px;vertical-align:middle;">Log voortaan in op <a href="https://ypd-dashboard.vercel.app/login" style="color:#7B3FA0;font-weight:600;">ypd-dashboard.vercel.app</a></span>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:8px 0;vertical-align:top;">
                           <span style="display:inline-block;background:#7B3FA0;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">3</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Klik op de inloglink die je per e-mail ontvangt</span>
+                          <span style="color:#444;font-size:14px;vertical-align:middle;">Vul in: <strong>${email}</strong> + jouw wachtwoord</span>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:8px 0;vertical-align:top;">
                           <span style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:10px;vertical-align:middle;">✓</span>
-                          <span style="color:#444;font-size:14px;vertical-align:middle;">Je bent ingelogd — geen wachtwoord nodig!</span>
+                          <span style="color:#444;font-size:14px;vertical-align:middle;">Je bent ingelogd!</span>
                         </td>
                       </tr>
                     </table>
@@ -153,16 +165,17 @@ function welkomMailHtml(email: string): string {
               </table>
 
               <!-- CTA knop -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
-                    <a href="https://ypd-dashboard.vercel.app/login"
+                    <a href="${wachtwoordLink}"
                        style="display:inline-block;background:linear-gradient(90deg,#7B3FA0,#E8547A);color:#fff;text-decoration:none;padding:14px 36px;border-radius:12px;font-size:15px;font-weight:700;">
-                      Ga naar het dashboard →
+                      Stel je wachtwoord in →
                     </a>
                   </td>
                 </tr>
               </table>
+              <p style="color:#bbb;font-size:11px;text-align:center;margin:0 0 28px 0;">Deze link is 24 uur geldig.</p>
 
               <hr style="border:none;border-top:1px solid #f0f0f0;margin:0 0 20px 0;" />
               <p style="color:#bbb;font-size:11px;margin:0;text-align:center;">

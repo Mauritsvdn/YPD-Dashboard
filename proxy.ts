@@ -41,6 +41,11 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // Set-password: toegankelijk met Supabase recovery sessie (gebruiker is net via link ingelogd)
+  if (pathname.startsWith("/set-password")) {
+    return response;
+  }
+
   // Beveiligde routes — redirect naar login als niet ingelogd
   if (!user) {
     return NextResponse.redirect(new URL("/login", request.url));
