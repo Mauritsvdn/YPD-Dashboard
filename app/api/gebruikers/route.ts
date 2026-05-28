@@ -67,9 +67,15 @@ function welkomMailHtml(email: string, wachtwoordLink: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>Welkom bij het YPD Recruiter Dashboard</title>
+  <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    html, body { color-scheme: light only; supported-color-schemes: light only; }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#f2f2f2;font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:#f2f2f2;font-family:Arial,Helvetica,sans-serif;color-scheme:light only;supported-color-schemes:light only;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f2f2f2">
   <tr>
     <td align="center" style="padding:40px 16px;">
