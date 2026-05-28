@@ -126,6 +126,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
       <table width="100%" cellpadding="0" cellspacing="0" id="${anchor}" style="margin:28px 0 12px 0;">
         <tr>
           <td style="padding:10px 18px;border-radius:8px;background:linear-gradient(90deg,#f1eafa,#fce8f0);">
+            <a name="${anchor}" style="display:block;text-decoration:none;font-size:1px;line-height:1px;color:transparent;">&nbsp;</a>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td><p style="font-size:12px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1.2px;margin:0;">${cat}</p></td>
@@ -227,6 +228,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#eeecf0" class="ypd-bg-page">
   <tr>
     <td align="center" class="ypd-body-pad" style="padding:32px 16px;" id="top">
+      <a name="top" style="display:block;text-decoration:none;font-size:1px;line-height:1px;color:transparent;">&nbsp;</a>
       <table width="640" cellpadding="0" cellspacing="0" class="ypd-outer" style="max-width:640px;width:100%;">
 
         <!-- HEADER: wit met logo -->
