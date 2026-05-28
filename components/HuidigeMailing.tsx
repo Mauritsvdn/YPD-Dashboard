@@ -24,12 +24,30 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
   const [testBericht, setTestBericht] = useState("");
 
   const previewRef = useRef<HTMLDivElement>(null);
+  const previewBoxRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(1);
 
   // Scroll naar preview zodra die opent
   useEffect(() => {
     if (preview && previewRef.current) {
       previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }, [preview]);
+
+  // Schaal de iframe naar containerbreedte zodat de email-design (640px breed)
+  // proportioneel verkleind past op smalle schermen.
+  useEffect(() => {
+    if (!preview) return;
+    const el = previewBoxRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.clientWidth;
+      setPreviewScale(Math.min(1, w / 640));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [preview]);
 
   const baseUrl =
@@ -208,11 +226,24 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
       {preview && kandidaten.length > 0 && (
         <div className="mt-6" ref={previewRef}>
           <h3 className="font-semibold text-gray-700 mb-3 text-sm">E-mail preview</h3>
-          <div className="border border-gray-200 rounded-xl overflow-hidden" style={{ height: "clamp(400px, 70vh, 600px)" }}>
+          <div
+            ref={previewBoxRef}
+            className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 relative"
+            style={{ height: "clamp(400px, 70vh, 600px)" }}
+          >
             <iframe
               srcDoc={previewHtml}
-              className="w-full h-full"
               title="Mailing preview"
+              style={{
+                width: "640px",
+                height: `${100 / previewScale}%`,
+                transform: `scale(${previewScale})`,
+                transformOrigin: "top left",
+                position: "absolute",
+                top: 0,
+                left: `calc(50% - ${320 * previewScale}px)`,
+                border: "none",
+              }}
             />
           </div>
         </div>
