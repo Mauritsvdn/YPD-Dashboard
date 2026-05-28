@@ -63,16 +63,16 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
             .join("");
 
           return `
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;background:#fff;border-radius:12px;border:1px solid #e4e4e4;">
-          <tr><td>
+        <table width="100%" cellpadding="0" cellspacing="0" class="ypd-card" bgcolor="#ffffff" style="margin:0 0 16px 0;background:#fff;border-radius:12px;border:1px solid #e4e4e4;">
+          <tr><td class="ypd-card" bgcolor="#ffffff" style="background:#fff;">
 
             <!-- Kandidaat header -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="padding:18px 24px 14px 24px;border-bottom:1px solid #f0f0f0;">
-                  <p style="font-size:16px;font-weight:700;color:#1a1a1a;margin:0 0 5px 0;">${k.neepnaam}</p>
-                  <p style="font-size:13px;color:#777;margin:0;line-height:1.5;">
-                    ${k.regio}&nbsp;&nbsp;·&nbsp;&nbsp;${k.beschikbaarheid}&nbsp;&nbsp;·&nbsp;&nbsp;<span style="color:${PURPLE};font-weight:600;">${salarisDisplay}</span>&nbsp;<span style="color:#aaa;font-size:12px;">(${k.type})</span>
+                  <p class="ypd-text-dark" style="font-size:16px;font-weight:700;color:#1a1a1a;margin:0 0 5px 0;">${k.neepnaam}</p>
+                  <p class="ypd-text-muted" style="font-size:13px;color:#777;margin:0;line-height:1.5;">
+                    ${k.regio}&nbsp;&nbsp;·&nbsp;&nbsp;${k.beschikbaarheid}&nbsp;&nbsp;·&nbsp;&nbsp;<span class="ypd-text-purple" style="color:${PURPLE};font-weight:600;">${salarisDisplay}</span>&nbsp;<span style="color:#aaa;font-size:12px;">(${k.type})</span>
                   </p>
                 </td>
               </tr>
@@ -97,9 +97,9 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
             <!-- Bijzonderheden (volle breedte) -->
             <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #f0f0f0;">
               <tr>
-                <td style="padding:14px 24px;background:#faf8fc;">
-                  <p style="font-size:10px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1px;margin:0 0 6px 0;">Bijzonderheden</p>
-                  <p style="font-size:13px;color:#444;line-height:1.7;margin:0;">${k.bijzonderheden}</p>
+                <td class="ypd-bg-tint-2" bgcolor="#faf8fc" style="padding:14px 24px;background:#faf8fc;">
+                  <p class="ypd-text-purple" style="font-size:10px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1px;margin:0 0 6px 0;">Bijzonderheden</p>
+                  <p class="ypd-text-body" style="font-size:13px;color:#444;line-height:1.7;margin:0;">${k.bijzonderheden}</p>
                 </td>
               </tr>
             </table>
@@ -157,17 +157,47 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
   <style>
     :root { color-scheme: light only; supported-color-schemes: light only; }
     html, body { color-scheme: light only; supported-color-schemes: light only; }
+
+    /* Forceer originele kleuren in clients die toch dark-mode inversie toepassen
+       (Gmail iOS, sommige Android-clients, Outlook.com dark mode). */
+    @media (prefers-color-scheme: dark) {
+      .ypd-bg-page    { background-color: #eeecf0 !important; }
+      .ypd-bg-white   { background-color: #ffffff !important; }
+      .ypd-bg-grey    { background-color: #f4f2f6 !important; }
+      .ypd-bg-tint    { background-color: #faf7fd !important; }
+      .ypd-bg-tint-2  { background-color: #faf8fc !important; }
+      .ypd-bg-soft    { background-color: #f8f7f9 !important; }
+      .ypd-card       { background-color: #ffffff !important; }
+      .ypd-text-dark  { color: #1a1a1a !important; }
+      .ypd-text-body  { color: #444444 !important; }
+      .ypd-text-muted { color: #777777 !important; }
+      .ypd-text-soft  { color: #555555 !important; }
+      .ypd-text-purple{ color: #7B3FA0 !important; }
+    }
+    /* Outlook.com / Outlook dark mode */
+    [data-ogsc] .ypd-bg-page,    [data-ogsb] .ypd-bg-page    { background-color: #eeecf0 !important; }
+    [data-ogsc] .ypd-bg-white,   [data-ogsb] .ypd-bg-white   { background-color: #ffffff !important; }
+    [data-ogsc] .ypd-bg-grey,    [data-ogsb] .ypd-bg-grey    { background-color: #f4f2f6 !important; }
+    [data-ogsc] .ypd-bg-tint,    [data-ogsb] .ypd-bg-tint    { background-color: #faf7fd !important; }
+    [data-ogsc] .ypd-bg-tint-2,  [data-ogsb] .ypd-bg-tint-2  { background-color: #faf8fc !important; }
+    [data-ogsc] .ypd-bg-soft,    [data-ogsb] .ypd-bg-soft    { background-color: #f8f7f9 !important; }
+    [data-ogsc] .ypd-card,       [data-ogsb] .ypd-card       { background-color: #ffffff !important; }
+    [data-ogsc] .ypd-text-dark   { color: #1a1a1a !important; }
+    [data-ogsc] .ypd-text-body   { color: #444444 !important; }
+    [data-ogsc] .ypd-text-muted  { color: #777777 !important; }
+    [data-ogsc] .ypd-text-soft   { color: #555555 !important; }
+    [data-ogsc] .ypd-text-purple { color: #7B3FA0 !important; }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#eeecf0;font-family:Arial,Helvetica,sans-serif;color-scheme:light only;supported-color-schemes:light only;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#eeecf0">
+<body class="ypd-bg-page" style="margin:0;padding:0;background:#eeecf0;font-family:Arial,Helvetica,sans-serif;color-scheme:light only;supported-color-schemes:light only;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#eeecf0" class="ypd-bg-page">
   <tr>
     <td align="center" style="padding:32px 16px;" id="top">
       <table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;">
 
         <!-- HEADER: wit met logo -->
         <tr>
-          <td style="background:#fff;border-radius:16px 16px 0 0;padding:26px 40px 22px 40px;text-align:center;">
+          <td class="ypd-bg-white" bgcolor="#ffffff" style="background:#fff;border-radius:16px 16px 0 0;padding:26px 40px 22px 40px;text-align:center;">
             <img src="${LOGO_URL}" alt="YPD" height="46" style="display:block;margin:0 auto;" />
           </td>
         </tr>
@@ -186,8 +216,8 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 
         <!-- INTRO + CATEGORIEËN NAV -->
         <tr>
-          <td style="background:#fff;padding:22px 40px 20px 40px;">
-            <p style="color:#555;font-size:14px;line-height:1.7;margin:0 0 16px 0;">
+          <td class="ypd-bg-white" bgcolor="#ffffff" style="background:#fff;padding:22px 40px 20px 40px;">
+            <p class="ypd-text-soft" style="color:#555;font-size:14px;line-height:1.7;margin:0 0 16px 0;">
               Een beknopte selectie van onlangs gesproken kandidaten deze maand. Klik op een categorie om direct naar de profielen te gaan:
             </p>
             <p style="text-align:center;margin:0;line-height:2.4;border-top:1px solid #f5f5f5;padding-top:14px;">${navLinks}</p>
@@ -196,15 +226,15 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 
         <!-- KANDIDATEN -->
         <tr>
-          <td style="background:#f4f2f6;padding:4px 24px 24px 24px;">
+          <td class="ypd-bg-grey" bgcolor="#f4f2f6" style="background:#f4f2f6;padding:4px 24px 24px 24px;">
             ${categorieSections}
           </td>
         </tr>
 
         <!-- SELECTIE DISCLAIMER -->
         <tr>
-          <td style="background:#fff;padding:22px 40px 14px 40px;text-align:center;border-top:2px solid #eeecf0;">
-            <p style="color:#555;font-size:13px;line-height:1.7;margin:0 0 8px 0;">
+          <td class="ypd-bg-white" bgcolor="#ffffff" style="background:#fff;padding:22px 40px 14px 40px;text-align:center;border-top:2px solid #eeecf0;">
+            <p class="ypd-text-soft" style="color:#555;font-size:13px;line-height:1.7;margin:0 0 8px 0;">
               Dit is slechts een selectie van beschikbare kandidaten.<br>
               Voor andere interessante profielen kunt u ons uiteraard ook benaderen!
             </p>
@@ -216,16 +246,16 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 
         <!-- WERVINGSFEE -->
         <tr>
-          <td style="background:#faf7fd;padding:14px 40px;border-top:1px solid #ede4f8;border-bottom:1px solid #ede4f8;">
-            <p style="color:#555;font-size:12px;line-height:1.7;margin:0;text-align:center;">
-              Voor professionals die we al in bemiddeling hebben, maar die we niet specifiek hebben geworven voor uw openstaande vacature, hanteren wij een wervingsfee van <strong style="color:${PURPLE};">16% van het bruto jaarsalaris</strong> (op fulltime basis).
+          <td class="ypd-bg-tint" bgcolor="#faf7fd" style="background:#faf7fd;padding:14px 40px;border-top:1px solid #ede4f8;border-bottom:1px solid #ede4f8;">
+            <p class="ypd-text-soft" style="color:#555;font-size:12px;line-height:1.7;margin:0;text-align:center;">
+              Voor professionals die we al in bemiddeling hebben, maar die we niet specifiek hebben geworven voor uw openstaande vacature, hanteren wij een wervingsfee van <strong class="ypd-text-purple" style="color:${PURPLE};">16% van het bruto jaarsalaris</strong> (op fulltime basis).
             </p>
           </td>
         </tr>
 
         <!-- DIENSTEN + CONTACT -->
         <tr>
-          <td style="background:#fff;padding:20px 40px 22px 40px;">
+          <td class="ypd-bg-white" bgcolor="#ffffff" style="background:#fff;padding:20px 40px 22px 40px;">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="55%" valign="top" style="padding-right:20px;">
@@ -251,7 +281,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 
         <!-- FOOTER -->
         <tr>
-          <td style="background:#f8f7f9;border-top:1px solid #e8e4ec;padding:18px 40px 22px 40px;text-align:center;border-radius:0 0 16px 16px;">
+          <td class="ypd-bg-soft" bgcolor="#f8f7f9" style="background:#f8f7f9;border-top:1px solid #e8e4ec;padding:18px 40px 22px 40px;text-align:center;border-radius:0 0 16px 16px;">
             <img src="${LOGO_URL}" alt="YPD" height="28" style="display:block;margin:0 auto 10px auto;" />
             <p style="color:#bbb;font-size:11px;margin:0 0 3px 0;">
               Copyright &copy; ${jaar} Yours Personeelsdiensten, All rights reserved.
