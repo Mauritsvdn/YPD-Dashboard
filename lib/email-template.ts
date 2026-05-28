@@ -151,9 +151,15 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>YPD – Beschikbare Professionals ${maandJaar}</title>
+  <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+    html, body { color-scheme: light only; supported-color-schemes: light only; }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#eeecf0;font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0;padding:0;background:#eeecf0;font-family:Arial,Helvetica,sans-serif;color-scheme:light only;supported-color-schemes:light only;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#eeecf0">
   <tr>
     <td align="center" style="padding:32px 16px;" id="top">
