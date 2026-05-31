@@ -51,7 +51,7 @@ export default function DashboardPage() {
   async function voegVeelToe(nieuweKandidaten: Kandidaat[]) {
     setBulkBezig(true);
     try {
-      await Promise.all(
+      const resultaten = await Promise.all(
         nieuweKandidaten.map((k) =>
           fetch("/api/kandidaten", {
             method: "POST",
@@ -60,6 +60,11 @@ export default function DashboardPage() {
           })
         )
       );
+      const mislukt = resultaten.find((res) => !res.ok);
+      if (mislukt) {
+        const data = await mislukt.json().catch(() => ({}));
+        throw new Error(data.error || "Niet alle kandidaten konden worden opgeslagen");
+      }
       setKandidaten((prev) => [...prev, ...nieuweKandidaten]);
       setActieveTab("mailing");
     } finally {
@@ -178,6 +183,11 @@ export default function DashboardPage() {
             kandidaten={kandidaten}
             laden={laden}
             onVerwijder={verwijder}
+            onBijwerken={(bijgewerkt) =>
+              setKandidaten((prev) =>
+                prev.map((k) => (k.id === bijgewerkt.id ? bijgewerkt : k))
+              )
+            }
             onVerstuurd={onVerstuurd}
           />
         )}

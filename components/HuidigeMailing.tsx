@@ -1,21 +1,43 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Kandidaat } from "@/lib/types";
+import { Kandidaat, CATEGORIEEN } from "@/lib/types";
 import { generateMailchimpHtml } from "@/lib/email-template";
 
 interface Props {
   kandidaten: Kandidaat[];
   laden: boolean;
   onVerwijder: (id: string) => void;
+  onBijwerken: (kandidaat: Kandidaat) => void;
   onVerstuurd: () => void;
 }
 
-export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerstuurd }: Props) {
+const legeKandidaat: Kandidaat = {
+  id: "",
+  neepnaam: "",
+  regio: "",
+  beschikbaarheid: "",
+  salaris: "",
+  type: "NN",
+  functies: [],
+  werkervaring: [],
+  opleidingen: [],
+  bijzonderheden: "",
+  categorie: CATEGORIEEN[0],
+  pitchTekst: "",
+};
+
+function regelsNaarArray(waarde: string) {
+  return waarde.split("\n");
+}
+
+export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwerken, onVerstuurd }: Props) {
   const [preview, setPreview] = useState(false);
   const [versturen, setVersturen] = useState(false);
   const [bericht, setBericht] = useState("");
   const [fout, setFout] = useState("");
+  const [bewerken, setBewerken] = useState<Kandidaat | null>(null);
+  const [opslaan, setOpslaan] = useState(false);
 
   // Testmail
   const [testModus, setTestModus] = useState(false);
@@ -107,6 +129,41 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
     } finally {
       setTestVersturen(false);
     }
+  }
+
+  async function slaWijzigingenOp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!bewerken) return;
+    setOpslaan(true);
+    setFout("");
+    setBericht("");
+
+    try {
+      const kandidaat = {
+        ...bewerken,
+        functies: bewerken.functies.map((f) => f.trim()).filter(Boolean),
+        werkervaring: bewerken.werkervaring.map((w) => w.trim()).filter(Boolean),
+        opleidingen: bewerken.opleidingen.map((o) => o.trim()).filter(Boolean),
+      };
+      const res = await fetch(`/api/kandidaten/${kandidaat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(kandidaat),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Fout bij opslaan");
+      onBijwerken(kandidaat);
+      setBewerken(null);
+      setBericht("✓ Kandidaat bijgewerkt.");
+    } catch (err) {
+      setFout(err instanceof Error ? err.message : "Fout bij opslaan");
+    } finally {
+      setOpslaan(false);
+    }
+  }
+
+  function updateBewerken(update: Partial<Kandidaat>) {
+    setBewerken((huidig) => ({ ...(huidig ?? legeKandidaat), ...update }));
   }
 
   const maandJaar = new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
@@ -212,14 +269,177 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerst
                   <p className="text-xs text-gray-400 mt-1">{k.functies.join(", ")}</p>
                 )}
               </div>
-              <button
-                onClick={() => onVerwijder(k.id)}
-                className="ml-4 text-red-400 hover:text-red-600 text-xs font-medium transition shrink-0"
-              >
-                Verwijder
-              </button>
+              <div className="ml-4 flex shrink-0 gap-3">
+                <button
+                  onClick={() => setBewerken(k)}
+                  className="text-purple-600 hover:text-purple-800 text-xs font-medium transition"
+                >
+                  Bewerk
+                </button>
+                <button
+                  onClick={() => onVerwijder(k.id)}
+                  className="text-red-400 hover:text-red-600 text-xs font-medium transition"
+                >
+                  Verwijder
+                </button>
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {bewerken && (
+        <div className="fixed inset-0 z-30 bg-black/30 px-3 py-6 overflow-y-auto">
+          <form
+            onSubmit={slaWijzigingenOp}
+            className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 p-5 sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Kandidaat bewerken</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Wijzigingen worden direct gebruikt in de mailingpreview.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBewerken(null)}
+                className="text-gray-400 hover:text-gray-600 text-sm font-semibold"
+              >
+                Sluiten
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="text-sm font-semibold text-gray-700">
+                Naam
+                <input
+                  value={bewerken.neepnaam}
+                  onChange={(e) => updateBewerken({ neepnaam: e.target.value })}
+                  required
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Categorie
+                <select
+                  value={bewerken.categorie}
+                  onChange={(e) => updateBewerken({ categorie: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  {CATEGORIEEN.map((categorie) => (
+                    <option key={categorie} value={categorie}>{categorie}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Regio
+                <input
+                  value={bewerken.regio}
+                  onChange={(e) => updateBewerken({ regio: e.target.value })}
+                  required
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Beschikbaarheid
+                <input
+                  value={bewerken.beschikbaarheid}
+                  onChange={(e) => updateBewerken({ beschikbaarheid: e.target.value })}
+                  required
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Salaris/tarief
+                <input
+                  value={bewerken.salaris}
+                  onChange={(e) => updateBewerken({ salaris: e.target.value })}
+                  required
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Type
+                <select
+                  value={bewerken.type}
+                  onChange={(e) => updateBewerken({ type: e.target.value })}
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="NN">NN</option>
+                  <option value="IN">IN</option>
+                  <option value="MB">MB</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              <label className="text-sm font-semibold text-gray-700">
+                Functies
+                <textarea
+                  value={bewerken.functies.join("\n")}
+                  onChange={(e) => updateBewerken({ functies: regelsNaarArray(e.target.value) })}
+                  rows={4}
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Werkervaring
+                <textarea
+                  value={bewerken.werkervaring.join("\n")}
+                  onChange={(e) => updateBewerken({ werkervaring: regelsNaarArray(e.target.value) })}
+                  rows={4}
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
+                Opleidingen
+                <textarea
+                  value={bewerken.opleidingen.join("\n")}
+                  onChange={(e) => updateBewerken({ opleidingen: regelsNaarArray(e.target.value) })}
+                  rows={4}
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                />
+              </label>
+            </div>
+
+            <label className="block mt-4 text-sm font-semibold text-gray-700">
+              Bijzonderheden
+              <textarea
+                value={bewerken.bijzonderheden}
+                onChange={(e) => updateBewerken({ bijzonderheden: e.target.value })}
+                rows={3}
+                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+              />
+            </label>
+
+            <label className="block mt-4 text-sm font-semibold text-gray-700">
+              Pitchtekst
+              <textarea
+                value={bewerken.pitchTekst}
+                onChange={(e) => updateBewerken({ pitchTekst: e.target.value })}
+                rows={9}
+                required
+                className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+              />
+            </label>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setBewerken(null)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
+              >
+                Annuleer
+              </button>
+              <button
+                type="submit"
+                disabled={opslaan}
+                className="px-5 py-2 rounded-lg text-white text-sm font-semibold transition disabled:opacity-50"
+                style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
+              >
+                {opslaan ? "Opslaan..." : "Wijzigingen opslaan"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
