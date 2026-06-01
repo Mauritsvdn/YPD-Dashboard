@@ -47,7 +47,9 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
 
   const previewRef = useRef<HTMLDivElement>(null);
   const previewBoxRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [previewScale, setPreviewScale] = useState(1);
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Scroll naar preview zodra die opent
   useEffect(() => {
@@ -85,6 +87,22 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
       previewHtml = "<p style='padding:2rem;color:red'>Fout bij genereren preview.</p>";
     }
   }
+
+  // Meet de werkelijke hoogte van de email-inhoud zodat de box-hoogte exact
+  // de geschaalde mail volgt en de hele mail in één keer zichtbaar is.
+  const meetContentHoogte = () => {
+    const doc = iframeRef.current?.contentDocument;
+    if (doc?.body) {
+      setContentHeight(doc.body.scrollHeight);
+    }
+  };
+
+  useEffect(() => {
+    if (!preview) return;
+    // Hermeten zodra de preview-HTML wijzigt (bv. kandidaat aangepast).
+    const id = requestAnimationFrame(meetContentHoogte);
+    return () => cancelAnimationFrame(id);
+  }, [preview, previewHtml]);
 
   async function verstuurMailing() {
     if (!confirm("Weet je zeker dat je de mailing naar de hele lijst wilt versturen?")) return;
@@ -448,15 +466,26 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
           <h3 className="font-semibold text-gray-700 mb-3 text-sm">E-mail preview</h3>
           <div
             ref={previewBoxRef}
-            className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 relative"
-            style={{ height: "clamp(400px, 70vh, 600px)" }}
+            className="border border-gray-200 rounded-xl overflow-y-auto bg-gray-50 relative mx-auto"
+            style={{
+              width: "100%",
+              maxWidth: 640,
+              // Box-hoogte volgt de geschaalde mailhoogte zodat de hele mail in
+              // beeld past; pas vanaf zeer lange mails verschijnt er scroll.
+              height: contentHeight
+                ? `min(${Math.ceil(contentHeight * previewScale)}px, 80vh)`
+                : "clamp(400px, 70vh, 600px)",
+            }}
           >
             <iframe
+              ref={iframeRef}
               srcDoc={previewHtml}
               title="Mailing preview"
+              onLoad={meetContentHoogte}
+              scrolling="no"
               style={{
                 width: "640px",
-                height: `${100 / previewScale}%`,
+                height: contentHeight ? `${contentHeight}px` : `${100 / previewScale}%`,
                 transform: `scale(${previewScale})`,
                 transformOrigin: "top left",
                 position: "absolute",
