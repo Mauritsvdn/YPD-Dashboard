@@ -10,7 +10,16 @@ function CvAanvraagFormulier() {
   const kandidaat = params.get("kandidaat") ?? "";
   const emailParam = params.get("email") ?? "";
 
-  const [email, setEmail] = useState(emailParam);
+  // Een niet-vervangen Mailchimp merge tag (bv. "*|EMAIL|*" of "*|HTML:EMAIL|*")
+  // of een ongeldig adres behandelen we als "geen e-mail": dan tonen we een
+  // normaal invulbaar veld in plaats van de merge tag als tekst.
+  const isMergeTag = emailParam.includes("*|") || emailParam.includes("|*");
+  const isGeldigEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailParam);
+  const vooringevuldEmail = !isMergeTag && isGeldigEmail ? emailParam : "";
+  const emailVergrendeld = vooringevuldEmail !== "";
+
+  const [naam, setNaam] = useState("");
+  const [email, setEmail] = useState(vooringevuldEmail);
   const [telefoonnummer, setTelefoonnummer] = useState("");
   const [bedrijf, setBedrijf] = useState("");
   const [laden, setLaden] = useState(false);
@@ -18,8 +27,8 @@ function CvAanvraagFormulier() {
   const [foutmelding, setFoutmelding] = useState("");
 
   useEffect(() => {
-    setEmail(emailParam);
-  }, [emailParam]);
+    setEmail(vooringevuldEmail);
+  }, [vooringevuldEmail]);
 
   async function verstuur(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +39,7 @@ function CvAanvraagFormulier() {
       const res = await fetch("/api/cv-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaat, email, telefoonnummer, bedrijf }),
+        body: JSON.stringify({ kandidaat, naam, email, telefoonnummer, bedrijf }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -88,16 +97,36 @@ function CvAanvraagFormulier() {
               <form onSubmit={verstuur} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    E-mailadres <span className="text-red-400">*</span>
+                    Volledige naam <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    value={naam}
+                    onChange={(e) => setNaam(e.target.value)}
                     required
-                    placeholder="uw@bedrijf.nl"
+                    placeholder="Voor- en achternaam"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    E-mailadres <span className="text-red-400">*</span>
+                  </label>
+                  {emailVergrendeld ? (
+                    <div className="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm text-gray-600">
+                      {email}
+                    </div>
+                  ) : (
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="uw@bedrijf.nl"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    />
+                  )}
                 </div>
 
                 <div>

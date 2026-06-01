@@ -5,6 +5,16 @@ const PURPLE = "#7B3FA0";
 const PINK = "#E8547A";
 const GRADIENT = `linear-gradient(90deg, ${PURPLE}, ${PINK}, #E8823A, #F5A623)`;
 
+/**
+ * Houdt het scheidingsteken "|" in een categorienaam (bv. "Interim | Management | Directie")
+ * bij het voorgaande woord met een non-breaking space, zodat het label niet midden in de
+ * naam afbreekt met een losse "|" aan het begin van een regel. Wrappen mag alleen tussen
+ * de woorden, dus de naam blijft op één regel of wrapt netjes als geheel.
+ */
+function formatCategorieLabel(cat: string): string {
+  return cat.replace(/\s*\|\s*/g, "&nbsp;| ");
+}
+
 /** Formatteert het salarisbedrag. Puur getal → "€4.500,-", anders ongewijzigd (met € prefix). */
 function formatSalaris(salaris: string | null | undefined): string {
   const trimmed = (salaris ?? "").trim();
@@ -25,7 +35,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
     .map((cat) => {
       const anchor = cat.toLowerCase().replace(/[^a-z0-9]/g, "-");
       const count = kandidaten.filter((k) => k.categorie === cat).length;
-      return `<a href="#${anchor}" style="color:${PURPLE};text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">${cat}&nbsp;(${count})</a>`;
+      return `<a href="#${anchor}" style="color:${PURPLE};text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">${formatCategorieLabel(cat)}&nbsp;(${count})</a>`;
     })
     .join(`<span style="color:#ddd;margin:0 6px;">|</span>`);
 
@@ -129,7 +139,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
             <a name="${anchor}" style="display:block;text-decoration:none;font-size:1px;line-height:1px;color:transparent;">&nbsp;</a>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td><p style="font-size:12px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1.2px;margin:0;">${cat}</p></td>
+                <td><p style="font-size:12px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1.2px;margin:0;line-height:1.5;">${formatCategorieLabel(cat)}</p></td>
                 <td align="right"><p style="font-size:11px;color:#c4a0d8;margin:0;">${kands.length} kandidaat${kands.length !== 1 ? "en" : ""}</p></td>
               </tr>
             </table>
@@ -154,7 +164,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
-  <title>YPD – Beschikbare Professionals ${maandJaar}</title>
+  <title>YPD – Selectie Beschikbare Kandidaten ${maandJaar}</title>
   <style>
     :root { color-scheme: light only; supported-color-schemes: light only; }
     html, body { color-scheme: light only; supported-color-schemes: light only; }
@@ -245,7 +255,7 @@ export function generateMailchimpHtml(kandidaten: Kandidaat[], baseUrl: string):
         <tr>
           <td class="ypd-pad-lg" style="background:linear-gradient(135deg,#5e2880 0%,#c03d68 55%,#c86020 100%);padding:30px 40px;text-align:center;">
             <p class="ypd-hero-sub" style="color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 10px 0;">Yours Personeelsdiensten · Twente</p>
-            <p class="ypd-hero-title" style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px 0;">Beschikbare Professionals</p>
+            <p class="ypd-hero-title" style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px 0;">Selectie Beschikbare Kandidaten</p>
             <p style="color:rgba(255,255,255,0.88);font-size:15px;font-weight:300;margin:0;">${maandJaar}</p>
           </td>
         </tr>

@@ -1,12 +1,20 @@
 -- Voer dit eenmalig uit in de Supabase SQL Editor
 
--- CV-aanvragen (ongewijzigd)
+-- CV-aanvragen
 create table if not exists cv_requests (
   id uuid default gen_random_uuid() primary key,
   kandidaat_naam text not null,
+  aanvrager_naam text,
   aanvrager_email text not null,
+  telefoonnummer text,
+  bedrijf_naam text,
   created_at timestamp with time zone default now()
 );
+
+-- Idempotente kolommen voor bestaande installaties
+alter table cv_requests add column if not exists aanvrager_naam text;
+alter table cv_requests add column if not exists telefoonnummer text;
+alter table cv_requests add column if not exists bedrijf_naam text;
 
 alter table cv_requests enable row level security;
 

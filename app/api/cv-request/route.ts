@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const kandidaat: string = body.kandidaat || "";
+    const naam: string = body.naam || "";
     const email: string = body.email || "";
     const telefoonnummer: string = body.telefoonnummer || "";
     const bedrijf: string = body.bedrijf || "";
@@ -32,23 +33,29 @@ export async function POST(request: Request) {
     if (!kandidaat || !email) {
       return NextResponse.json({ error: "Kandidaat en e-mail zijn verplicht" }, { status: 400 });
     }
+    if (!naam) {
+      return NextResponse.json({ error: "Volledige naam is verplicht" }, { status: 400 });
+    }
     if (!telefoonnummer) {
       return NextResponse.json({ error: "Telefoonnummer is verplicht" }, { status: 400 });
     }
 
-    await supabase.from("cv_requests").insert({
+    const { error: dbFout } = await supabase.from("cv_requests").insert({
       kandidaat_naam: kandidaat,
+      aanvrager_naam: naam,
       aanvrager_email: email,
       telefoonnummer,
       bedrijf_naam: bedrijf || null,
     });
+    // Een DB-fout mag de notificatie naar YPD niet blokkeren — wel loggen.
+    if (dbFout) console.error("cv-request opslaan in Supabase mislukt:", dbFout);
 
     // Notificatie naar YPD intern
     await resend.emails.send({
       from: "YPD Dashboard <noreply@ypd.nl>",
       to: "info@ypd.nl",
       subject: `📥 CV-aanvraag: ${kandidaat}`,
-      html: interneNotificatieHtml(kandidaat, email, telefoonnummer, bedrijf),
+      html: interneNotificatieHtml(kandidaat, naam, email, telefoonnummer, bedrijf),
     });
 
     // Bevestigingsmail naar de aanvrager
@@ -68,7 +75,7 @@ export async function POST(request: Request) {
 
 // ─── Interne notificatie → info@ypd.nl ────────────────────────────────────
 
-function interneNotificatieHtml(kandidaat: string, aanvrager: string, telefoonnummer: string, bedrijf: string): string {
+function interneNotificatieHtml(kandidaat: string, naam: string, aanvrager: string, telefoonnummer: string, bedrijf: string): string {
   const datum = new Date().toLocaleString("nl-NL", {
     weekday: "long", day: "numeric", month: "long",
     year: "numeric", hour: "2-digit", minute: "2-digit",
@@ -119,7 +126,8 @@ function interneNotificatieHtml(kandidaat: string, aanvrager: string, telefoonnu
           <tr>
             <td style="padding:16px 20px;">
               <p style="color:#E8547A;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px 0;">Aangevraagd door</p>
-              ${bedrijf ? `<p style="color:#1a1a1a;font-size:15px;font-weight:700;margin:0 0 2px 0;">${bedrijf}</p>` : ""}
+              <p style="color:#1a1a1a;font-size:15px;font-weight:700;margin:0 0 2px 0;">${naam}</p>
+              ${bedrijf ? `<p style="color:#666;font-size:14px;margin:0 0 2px 0;">${bedrijf}</p>` : ""}
               <p style="color:#444;font-size:14px;margin:0 0 2px 0;">${aanvrager}</p>
               <p style="margin:0 0 8px 0;">
                 <a href="tel:${telefoonnummer}" style="color:#7B3FA0;font-size:15px;font-weight:700;text-decoration:none;">📞 ${telefoonnummer}</a>
