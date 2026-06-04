@@ -56,7 +56,7 @@ export function generateMailchimpHtml(
     .map((cat) => {
       const anchor = cat.toLowerCase().replace(/[^a-z0-9]/g, "-");
       const count = kandidaten.filter((k) => k.categorie === cat).length;
-      return `<a href="#${anchor}" style="color:${PURPLE};text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">${formatCategorieLabel(cat)}&nbsp;(${count})</a>`;
+      return `<a href="#${anchor}" style="display:inline-block;color:${PURPLE};text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">${formatCategorieLabel(cat)}&nbsp;(${count})</a>`;
     })
     .join(`<span style="color:#ddd;margin:0 6px;">|</span>`);
 
