@@ -4,9 +4,10 @@ import { Kandidaat } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
-    const { kandidaten, testEmail } = (await request.json()) as {
+    const { kandidaten, testEmail, maandJaar: maandJaarInput } = (await request.json()) as {
       kandidaten: Kandidaat[];
       testEmail: string;
+      maandJaar?: string;
     };
 
     if (!kandidaten || kandidaten.length === 0) {
@@ -21,8 +22,11 @@ export async function POST(request: Request) {
     const audienceId = process.env.MAILCHIMP_AUDIENCE_ID!;
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ypd-dashboard.vercel.app";
 
-    const maandJaar = new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
-    const html = generateMailchimpHtml(kandidaten, baseUrl);
+    // Door de recruiter ingestelde maand/jaar; valt terug op de huidige maand.
+    const maandJaar =
+      maandJaarInput?.trim() ||
+      new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+    const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {

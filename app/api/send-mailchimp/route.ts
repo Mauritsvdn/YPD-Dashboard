@@ -5,7 +5,10 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const { kandidaten } = (await request.json()) as { kandidaten: Kandidaat[] };
+    const { kandidaten, maandJaar: maandJaarInput } = (await request.json()) as {
+      kandidaten: Kandidaat[];
+      maandJaar?: string;
+    };
 
     if (!kandidaten || kandidaten.length === 0) {
       return NextResponse.json({ error: "Geen kandidaten in de mailing" }, { status: 400 });
@@ -16,10 +19,13 @@ export async function POST(request: Request) {
     const audienceId = process.env.MAILCHIMP_AUDIENCE_ID!;
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ypd-dashboard.vercel.app";
 
-    const maandJaar = new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+    // Door de recruiter ingestelde maand/jaar; valt terug op de huidige maand.
+    const maandJaar =
+      maandJaarInput?.trim() ||
+      new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
     const onderwerp = `Onlangs gesproken kandidaten ${maandJaar}`;
 
-    const html = generateMailchimpHtml(kandidaten, baseUrl);
+    const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {

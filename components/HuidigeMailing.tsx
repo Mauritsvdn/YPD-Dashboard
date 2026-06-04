@@ -12,6 +12,11 @@ interface Props {
   onVerstuurd: () => void;
 }
 
+const MAAND_NAMEN = [
+  "januari", "februari", "maart", "april", "mei", "juni",
+  "juli", "augustus", "september", "oktober", "november", "december",
+];
+
 const legeKandidaat: Kandidaat = {
   id: "",
   neepnaam: "",
@@ -33,6 +38,13 @@ function regelsNaarArray(waarde: string) {
 
 export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwerken, onVerstuurd }: Props) {
   const [preview, setPreview] = useState(false);
+
+  // Maand/jaar voor onderwerpregel + mailheader. Standaard de huidige maand,
+  // maar de recruiter stelt deze altijd zelf in voordat verstuurd wordt.
+  const [maand, setMaand] = useState(() => new Date().getMonth());
+  const [jaar, setJaar] = useState(() => new Date().getFullYear());
+  const maandJaar = `${MAAND_NAMEN[maand]} ${jaar}`;
+
   const [versturen, setVersturen] = useState(false);
   const [bericht, setBericht] = useState("");
   const [fout, setFout] = useState("");
@@ -82,7 +94,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
   let previewHtml = "";
   if (kandidaten.length > 0) {
     try {
-      previewHtml = generateMailchimpHtml(kandidaten, baseUrl);
+      previewHtml = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
     } catch {
       previewHtml = "<p style='padding:2rem;color:red'>Fout bij genereren preview.</p>";
     }
@@ -113,7 +125,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
       const res = await fetch("/api/send-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten }),
+        body: JSON.stringify({ kandidaten, maandJaar }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -135,7 +147,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
       const res = await fetch("/api/test-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten, testEmail }),
+        body: JSON.stringify({ kandidaten, testEmail, maandJaar }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -184,8 +196,6 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
     setBewerken((huidig) => ({ ...(huidig ?? legeKandidaat), ...update }));
   }
 
-  const maandJaar = new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
-
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
@@ -220,6 +230,33 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
           </div>
         )}
       </div>
+
+      {/* Maand/jaar voor onderwerpregel + mailheader — altijd zelf in te stellen */}
+      {!laden && kandidaten.length > 0 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2 px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+          <span className="text-sm font-semibold text-gray-700">Mailing voor:</span>
+          <select
+            value={maand}
+            onChange={(e) => setMaand(Number(e.target.value))}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+          >
+            {MAAND_NAMEN.map((naam, i) => (
+              <option key={i} value={i}>{naam.charAt(0).toUpperCase() + naam.slice(1)}</option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={jaar}
+            onChange={(e) => setJaar(Number(e.target.value))}
+            min={2020}
+            max={2100}
+            className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+          <span className="text-xs text-gray-500 ml-auto">
+            Onderwerp: <span className="font-medium text-gray-700">Onlangs gesproken kandidaten {maandJaar}</span>
+          </span>
+        </div>
+      )}
 
       {/* Testmail formulier */}
       {testModus && (
