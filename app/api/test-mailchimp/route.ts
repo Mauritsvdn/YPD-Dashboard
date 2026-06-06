@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         type: "regular",
         recipients: { list_id: audienceId },
         settings: {
-          subject_line: `[TEST] Onlangs gesproken kandidaten ${maandJaar}`,
+          subject_line: `[TEST] Selectie onlangs gesproken professionals ${maandJaar}`,
           from_name: "YPD",
           reply_to: "info@ypd.nl",
           from_email: "info@ypd.nl",

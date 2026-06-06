@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const maandJaar =
       maandJaarInput?.trim() ||
       new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
-    const onderwerp = `Onlangs gesproken kandidaten ${maandJaar}`;
+    const onderwerp = `Selectie onlangs gesproken professionals ${maandJaar}`;
 
     const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
 
