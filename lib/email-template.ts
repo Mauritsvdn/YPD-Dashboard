@@ -16,7 +16,7 @@ function formatCategorieLabel(cat: string): string {
 
 /**
  * Formatteert het salaris voor weergave.
- * - Jaarsalaris (K-notatie "85K", of een puur getal ≥ 12.000) → "85K" (geen €, geen /maand).
+ * - Jaarsalaris (K-notatie "85K", of een puur getal ≥ 12.000) → "€85K" (geen /maand).
  * - Maandsalaris (puur getal < 12.000) → "€4.500,- bruto/maand".
  * - Uurtarief / vrije tekst → ongewijzigd (met € prefix indien nog niet aanwezig).
  */
@@ -24,10 +24,10 @@ export function formatSalaris(salaris: string | null | undefined): string {
   const trimmed = (salaris ?? "").trim();
   if (!trimmed) return "";
   const kMatch = trimmed.match(/^€?\s*(\d+)\s*[kK]$/);
-  if (kMatch) return `${kMatch[1]}K`;
+  if (kMatch) return `€${kMatch[1]}K`;
   if (/^\d+$/.test(trimmed)) {
     const n = parseInt(trimmed, 10);
-    if (n >= 12000) return `${Math.round(n / 1000)}K`;
+    if (n >= 12000) return `€${Math.round(n / 1000)}K`;
     return `€${n.toLocaleString("nl-NL")},- bruto/maand`;
   }
   return trimmed.startsWith("€") ? trimmed : `€${trimmed}`;
