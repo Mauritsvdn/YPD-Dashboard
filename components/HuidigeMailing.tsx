@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Kandidaat, CATEGORIEEN } from "@/lib/types";
-import { generateMailchimpHtml } from "@/lib/email-template";
+import { generateMailchimpHtml, formatSalaris } from "@/lib/email-template";
 
 interface Props {
   kandidaten: Kandidaat[];
@@ -20,6 +20,7 @@ const MAAND_NAMEN = [
 const legeKandidaat: Kandidaat = {
   id: "",
   neepnaam: "",
+  leeftijd: "",
   regio: "",
   beschikbaarheid: "",
   salaris: "",
@@ -316,10 +317,10 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
             <div key={k.id} className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-800">{k.neepnaam}</span>
+                  <span className="font-semibold text-gray-800">{k.neepnaam}{k.leeftijd ? ` - ${k.leeftijd} jaar` : ""}</span>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{k.categorie}</span>
                 </div>
-                <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} &bull; €{k.salaris},- ({k.type})</p>
+                <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} &bull; {formatSalaris(k.salaris)} ({k.type})</p>
                 {k.functies.length > 0 && (
                   <p className="text-xs text-gray-400 mt-1">{k.functies.join(", ")}</p>
                 )}
@@ -374,6 +375,15 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
                 />
               </label>
               <label className="text-sm font-semibold text-gray-700">
+                Leeftijd
+                <input
+                  value={bewerken.leeftijd ?? ""}
+                  onChange={(e) => updateBewerken({ leeftijd: e.target.value })}
+                  placeholder="bijv. 36"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </label>
+              <label className="text-sm font-semibold text-gray-700">
                 Categorie
                 <select
                   value={bewerken.categorie}
@@ -409,6 +419,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
                   value={bewerken.salaris}
                   onChange={(e) => updateBewerken({ salaris: e.target.value })}
                   required
+                  placeholder="4500 = €/maand · 85K = jaarsalaris"
                   className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </label>

@@ -1,6 +1,7 @@
 export interface Kandidaat {
   id: string;
   neepnaam: string;
+  leeftijd?: string;
   regio: string;
   beschikbaarheid: string;
   salaris: string;

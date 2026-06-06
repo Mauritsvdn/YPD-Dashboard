@@ -42,9 +42,10 @@ Gebruik altijd een verzonnen Nederlandse voornaam (nooit de echte naam uit het C
 Geef ALLEEN een JSON-object terug zonder extra tekst, in dit exacte schema:
 {
   "neepnaam": "Nederlandse voornaam",
+  "leeftijd": "leeftijd in hele jaren als getal indien bekend, bijv '36' (lege string als onbekend)",
   "regio": "regio in Nederland",
   "beschikbaarheid": "aantal uren per week",
-  "salaris": "bedrag zonder punt bijv 4500",
+  "salaris": "maandsalaris als getal zonder punt (bijv '4500'); of bij UITSLUITEND een jaarsalaris de K-notatie (bijv '85K')",
   "type": "NN of IN (in loondienst of als interim)",
   "functies": ["gewenste functie 1", "gewenste functie 2"],
   "werkervaring": ["bullet 1 werkervaring", "bullet 2 werkervaring"],
@@ -72,7 +73,8 @@ Geef ALLEEN een JSON-object terug zonder extra tekst, in dit exacte schema:
 
     const pitch = JSON.parse(jsonMatch[0]);
 
-    const pitchTekst = `${pitch.neepnaam} – ${pitch.regio} – beschikbaar ${pitch.beschikbaarheid} uur – Huidig Salaris: €${pitch.salaris},- bruto per maand (${pitch.type})
+    const naamRegel = pitch.leeftijd ? `${pitch.neepnaam} - ${pitch.leeftijd} jaar oud` : pitch.neepnaam;
+    const pitchTekst = `${naamRegel} – ${pitch.regio} – beschikbaar ${pitch.beschikbaarheid} uur – Salaris: ${pitch.salaris} (${pitch.type})
 
 Gewenste functie(s):
 ${pitch.functies.map((f: string) => `• ${f}`).join("\n")}
