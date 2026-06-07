@@ -33,10 +33,12 @@ type RuweKandidaat = {
   categorie?: string;
 };
 
-// Maximale grootte (in tekens) per batch die we naar Claude sturen. Hieronder
-// blijft de JSON-respons ruim binnen de max_tokens-limiet, zodat hij niet wordt
-// afgekapt. ~10 kandidaatprofielen passen comfortabel binnen deze grens.
-const BATCH_CHAR_LIMIT = 6000;
+// Maximale grootte (in tekens) per batch. Ruim gekozen zodat een normaal
+// maanddocument in één keer wordt verwerkt — dan kan geen enkel profiel op een
+// batch-grens worden doorgesneden (de oorzaak van ontbrekende gegevens). Alleen
+// uitzonderlijk grote documenten worden alsnog opgesplitst. De JSON-respons past
+// hieronder ruim binnen max_tokens (streaming, 32K).
+const BATCH_CHAR_LIMIT = 24000;
 
 // Knipt het document op in batches op alinea-grenzen, zodat een kandidaatprofiel
 // niet middenin wordt doorgesneden. Kleine documenten leveren één batch op.
@@ -60,7 +62,9 @@ function splitInBatches(documentTekst: string): string[] {
 
 const SYSTEM_PROMPT = `Je bent een recruiter bij YPD die maandelijkse kandidatendocumenten verwerkt.
 
-Analyseer het aangeleverde document en extraheer ALLE kandidaten die erin staan beschreven.
+Analyseer het aangeleverde document en extraheer ALLE kandidaten die erin staan beschreven. Werk het document zorgvuldig van boven tot onder door en sla niemand over.
+
+Neem per kandidaat ALLE genoemde informatie volledig over. Vat niets samen en laat niets weg dat in het document staat: alle gewenste functies, álle werkervaring-punten, álle opleidingen en de volledige bijzonderheden-tekst. Als een veld in het document staat, moet het ook in de JSON terechtkomen.
 
 Per kandidaat geef je exact dit JSON-object terug:
 {
@@ -84,14 +88,16 @@ Geef ALLEEN een JSON-array terug met alle gevonden kandidaten. Geen andere tekst
 // Stuurt één batch naar Claude en parseert de JSON-array. Gooit een duidelijke
 // foutmelding als het antwoord werd afgekapt of niet te parsen is.
 async function extractKandidaten(batchTekst: string): Promise<RuweKandidaat[]> {
-  const message = await client.messages.create({
+  // Streamen i.p.v. één request: bij een grote JSON-respons (veel kandidaten)
+  // voorkomt dit HTTP-timeouts. Haiku 4.5 ondersteunt tot 64K outputtokens;
+  // 32K geeft ruim budget zodat de array nooit middenin wordt afgekapt.
+  const stream = client.messages.stream({
     model: "claude-haiku-4-5-20251001",
-    // Haiku 4.5 ondersteunt tot 64K outputtokens; ruim budget per batch zodat
-    // de JSON-array nooit middenin wordt afgekapt.
-    max_tokens: 16000,
+    max_tokens: 32000,
     messages: [{ role: "user", content: `Documentinhoud:\n\n${batchTekst}` }],
     system: SYSTEM_PROMPT,
   });
+  const message = await stream.finalMessage();
 
   // Afgekapt antwoord → expliciet melden i.p.v. een cryptische JSON parse error.
   if (message.stop_reason === "max_tokens") {
