@@ -129,6 +129,29 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
     }
   };
 
+  const koppelPreviewAnchors = () => {
+    const doc = iframeRef.current?.contentDocument;
+    const box = previewBoxRef.current;
+    if (!doc || !box) return;
+
+    doc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
+      link.onclick = (event) => {
+        const doel = link.getAttribute("href")?.slice(1);
+        if (!doel) return;
+        const target =
+          doc.getElementById(doel) ||
+          doc.querySelector<HTMLElement>(`a[name="${CSS.escape(doel)}"]`);
+        if (!target) return;
+        event.preventDefault();
+        const scale = Math.min(1, box.clientWidth / 640);
+        box.scrollTo({
+          top: target.getBoundingClientRect().top * scale,
+          behavior: "smooth",
+        });
+      };
+    });
+  };
+
   useEffect(() => {
     if (!preview) return;
     // Hermeten zodra de preview-HTML wijzigt (bv. kandidaat aangepast).
@@ -604,7 +627,10 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
               ref={iframeRef}
               srcDoc={previewHtml}
               title="Mailing preview"
-              onLoad={meetContentHoogte}
+              onLoad={() => {
+                meetContentHoogte();
+                koppelPreviewAnchors();
+              }}
               scrolling="no"
               style={{
                 width: "640px",
