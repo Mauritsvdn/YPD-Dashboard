@@ -284,8 +284,14 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
           <span aria-hidden>📋</span>
           <span className="text-gray-600">Verstuurt naar audience</span>
           <span className="font-semibold text-gray-800">{audience.naam}</span>
-          <span className="ml-auto px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">
-            {audience.aantal} subscribers
+          <span className="ml-auto flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold">
+              {kandidaten.length} profiel{kandidaten.length !== 1 ? "en" : ""}
+            </span>
+            <span aria-hidden className="text-gray-400">→</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">
+              {audience.aantal} subscribers
+            </span>
           </span>
         </div>
       )}
