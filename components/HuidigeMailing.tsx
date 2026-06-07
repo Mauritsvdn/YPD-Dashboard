@@ -236,6 +236,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
     try {
       const kandidaat = {
         ...bewerken,
+        leeftijd: (bewerken.leeftijd ?? "").trim(),
         functies: bewerken.functies.map((f) => f.trim()).filter(Boolean),
         werkervaring: bewerken.werkervaring.map((w) => w.trim()).filter(Boolean),
         opleidingen: bewerken.opleidingen.map((o) => o.trim()).filter(Boolean),
@@ -412,7 +413,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
             <div key={k.id} className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-gray-800">{k.neepnaam}{k.leeftijd ? ` · ${k.leeftijd} jaar` : ""}</span>
+                  <span className="font-semibold text-gray-800">{k.neepnaam}{k.leeftijd ? ` - ${k.leeftijd}` : ""}</span>
                   <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{k.categorie}</span>
                 </div>
                 <p className="text-xs text-gray-500">{k.regio} &bull; {k.beschikbaarheid} &bull; {formatSalaris(k.salaris)} ({k.type})</p>

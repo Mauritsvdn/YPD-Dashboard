@@ -17,6 +17,7 @@ export async function GET() {
   const kandidaten: Kandidaat[] = (data ?? []).map((k) => ({
     id: k.id,
     neepnaam: k.neepnaam,
+    leeftijd: k.leeftijd ?? "",
     regio: k.regio,
     beschikbaarheid: k.beschikbaarheid,
     salaris: k.salaris,
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
   const { error } = await supabase.from("kandidaten").insert({
     id: kandidaat.id,
     neepnaam: kandidaat.neepnaam,
+    leeftijd: kandidaat.leeftijd ?? "",
     regio: kandidaat.regio,
     beschikbaarheid: kandidaat.beschikbaarheid,
     salaris: kandidaat.salaris,

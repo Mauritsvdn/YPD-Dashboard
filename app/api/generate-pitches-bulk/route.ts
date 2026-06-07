@@ -69,7 +69,7 @@ Neem per kandidaat ALLE genoemde informatie volledig over. Vat niets samen en la
 Per kandidaat geef je exact dit JSON-object terug:
 {
   "neepnaam": "de naam zoals in het document (als het een echte volledige naam is, vervang door een vergelijkbare fictieve Nederlandse voornaam)",
-  "leeftijd": "leeftijd in hele jaren als getal indien vermeld (bijv '36'), anders lege string",
+  "leeftijd": "VERPLICHT overnemen als leeftijd in hele jaren als getal (bijv '36'). Zoek actief naar leeftijd, 'jaar', geboortedatum, geboortejaar of datum van geboorte. Als alleen een geboortedatum staat, bereken de leeftijd in hele jaren op basis van vandaag. Alleen lege string als er echt geen leeftijd of geboortedatum in het profiel staat.",
   "regio": "regio of stad zoals vermeld",
   "beschikbaarheid": "beschikbaarheid zoals vermeld (bijv '32 uur' of '24-32 uur per week')",
   "salaris": "maandsalaris als getal (bijv '4500'); of bij een jaarsalaris de K-notatie (bijv '85K'); of de volledige tariefstring bij uurtarief (bijv '62,- excl. BTW per uur'). Staat er geen concreet bedrag maar bijvoorbeeld 'in overleg', 'nader te bepalen' of 'n.t.b.' (ook bij 'tariefindicatie: in overleg'), neem die aanduiding dan letterlijk over (bijv 'in overleg'). Laat dit veld nooit leeg als er enige indicatie staat.",
@@ -83,18 +83,21 @@ Per kandidaat geef je exact dit JSON-object terug:
 
 Neem elke professional MAAR ÉÉN KEER op — geen dubbele kandidaten, ook niet als iemand meerdere keren in het document voorkomt.
 
+Belangrijk voor leeftijd: controleer per kandidaat expliciet of er een leeftijd of geboortedatum in de profieltekst staat. Laat leeftijd nooit leeg wanneer die informatie direct of via geboortedatum afleidbaar is.
+
 Geef ALLEEN een JSON-array terug met alle gevonden kandidaten. Geen andere tekst, geen uitleg, geen markdown.`;
 
 // Stuurt één batch naar Claude en parseert de JSON-array. Gooit een duidelijke
 // foutmelding als het antwoord werd afgekapt of niet te parsen is.
 async function extractKandidaten(batchTekst: string): Promise<RuweKandidaat[]> {
+  const vandaag = new Date().toLocaleDateString("nl-NL");
   // Streamen i.p.v. één request: bij een grote JSON-respons (veel kandidaten)
   // voorkomt dit HTTP-timeouts. Haiku 4.5 ondersteunt tot 64K outputtokens;
   // 32K geeft ruim budget zodat de array nooit middenin wordt afgekapt.
   const stream = client.messages.stream({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 32000,
-    messages: [{ role: "user", content: `Documentinhoud:\n\n${batchTekst}` }],
+    messages: [{ role: "user", content: `Vandaag is ${vandaag}.\n\nDocumentinhoud:\n\n${batchTekst}` }],
     system: SYSTEM_PROMPT,
   });
   const message = await stream.finalMessage();
@@ -138,7 +141,7 @@ function buildPitchTekst(k: {
   opleidingen: string[];
   bijzonderheden: string;
 }): string {
-  const naamRegel = k.leeftijd ? `${k.neepnaam} - ${k.leeftijd} jaar oud` : k.neepnaam;
+  const naamRegel = k.leeftijd ? `${k.neepnaam} - ${k.leeftijd}` : k.neepnaam;
   return `${naamRegel} – ${k.regio} – beschikbaar ${k.beschikbaarheid} – Salaris/tarief: ${k.salaris} (${k.type})
 
 Gewenste functie(s):

@@ -29,6 +29,7 @@ function normaliseerRegels(regels: string[]) {
 function missendeVelden(k: Kandidaat) {
   const checks: [string, boolean][] = [
     ["naam", Boolean(k.neepnaam.trim())],
+    ["leeftijd", Boolean((k.leeftijd ?? "").trim())],
     ["regio", Boolean(k.regio.trim())],
     ["beschikbaarheid", Boolean(k.beschikbaarheid.trim())],
     ["salaris/tarief", Boolean(k.salaris.trim())],
@@ -99,6 +100,7 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
   async function voegGecontroleerdeKandidatenToe() {
     const opgeschoond = kandidaten.map((k) => ({
       ...k,
+      leeftijd: (k.leeftijd ?? "").trim(),
       functies: normaliseerRegels(k.functies),
       werkervaring: normaliseerRegels(k.werkervaring),
       opleidingen: normaliseerRegels(k.opleidingen),
@@ -276,6 +278,15 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
                       <input
                         value={k.neepnaam}
                         onChange={(e) => updateKandidaat(k.id, { neepnaam: e.target.value })}
+                        className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                      />
+                    </label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      Leeftijd
+                      <input
+                        value={k.leeftijd ?? ""}
+                        onChange={(e) => updateKandidaat(k.id, { leeftijd: e.target.value })}
+                        placeholder="Bijv. 44"
                         className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
                       />
                     </label>

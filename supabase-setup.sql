@@ -27,6 +27,7 @@ create policy "service_role_all" on cv_requests
 create table if not exists kandidaten (
   id text primary key,
   neepnaam text not null,
+  leeftijd text default '',
   regio text not null,
   beschikbaarheid text not null,
   salaris text not null,
@@ -40,6 +41,8 @@ create table if not exists kandidaten (
   verstuurd_op timestamp with time zone,   -- null = zit in huidige mailing
   created_at timestamp with time zone default now()
 );
+
+alter table kandidaten add column if not exists leeftijd text default '';
 
 alter table kandidaten enable row level security;
 

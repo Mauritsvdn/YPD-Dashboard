@@ -49,11 +49,11 @@ export function formatSalaris(salaris: string | null | undefined): string {
   return trimmed.startsWith("€") ? trimmed : `€${trimmed}`;
 }
 
-/** Naam + leeftijd, bv. "Marcus · 36 jaar". Leeftijd is optioneel. */
+/** Naam + leeftijd, bv. "Marcus - 36". Leeftijd is optioneel. */
 function formatNaam(neepnaam: string, leeftijd?: string): string {
   const l = (leeftijd ?? "").trim();
   if (!l) return neepnaam;
-  return `${neepnaam} · ${/^\d+$/.test(l) ? `${l} jaar` : l}`;
+  return `${neepnaam} - ${l}`;
 }
 
 // ── Herbruikbare inline-style fragmenten (1× gedefinieerd → minder herhaling per kandidaat) ──

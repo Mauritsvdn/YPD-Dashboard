@@ -13,6 +13,7 @@ export async function PATCH(
     .from("kandidaten")
     .update({
       neepnaam: kandidaat.neepnaam,
+      leeftijd: kandidaat.leeftijd ?? "",
       regio: kandidaat.regio,
       beschikbaarheid: kandidaat.beschikbaarheid,
       salaris: kandidaat.salaris,
