@@ -167,7 +167,7 @@ export function generateMailchimpHtml(
             `<a name="${anchor}" style="display:block;text-decoration:none;font-size:1px;line-height:1px;color:transparent;">&nbsp;</a>` +
             `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
               `<td><p style="font-size:12px;font-weight:700;color:${PURPLE};text-transform:uppercase;letter-spacing:1.2px;margin:0;line-height:1.5;">${formatCategorieLabel(cat)}</p></td>` +
-              `<td align="right"><p style="font-size:11px;color:#c4a0d8;margin:0;">${kands.length} kandidaat${kands.length !== 1 ? "en" : ""}</p></td>` +
+              `<td align="right"><p style="font-size:11px;color:#c4a0d8;margin:0;">${kands.length} ${kands.length !== 1 ? "kandidaten" : "kandidaat"}</p></td>` +
             `</tr></table>` +
           `</td></tr></table>` +
           kandidaatCards +
