@@ -32,6 +32,21 @@ export async function GET() {
   return NextResponse.json(kandidaten);
 }
 
+// Verwijder alle actieve kandidaten (die nu in de mailing staan).
+// Reeds verstuurde/gearchiveerde kandidaten blijven ongemoeid.
+export async function DELETE() {
+  const { error } = await supabase
+    .from("kandidaten")
+    .delete()
+    .is("verstuurd_op", null);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
 // Voeg een nieuwe kandidaat toe
 export async function POST(request: Request) {
   const kandidaat: Kandidaat = await request.json();

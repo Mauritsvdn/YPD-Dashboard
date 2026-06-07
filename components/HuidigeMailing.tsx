@@ -8,6 +8,7 @@ interface Props {
   kandidaten: Kandidaat[];
   laden: boolean;
   onVerwijder: (id: string) => void;
+  onVerwijderAlle: () => void | Promise<void>;
   onBijwerken: (kandidaat: Kandidaat) => void;
   onVerstuurd: () => void;
 }
@@ -37,8 +38,9 @@ function regelsNaarArray(waarde: string) {
   return waarde.split("\n");
 }
 
-export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwerken, onVerstuurd }: Props) {
+export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwijderAlle, onBijwerken, onVerstuurd }: Props) {
   const [preview, setPreview] = useState(false);
+  const [alleVerwijderen, setAlleVerwijderen] = useState(false);
 
   // Maand/jaar voor onderwerpregel + mailheader. Standaard de huidige maand,
   // maar de recruiter stelt deze altijd zelf in voordat verstuurd wordt.
@@ -156,6 +158,25 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
       setFout(err instanceof Error ? err.message : "Fout bij versturen");
     } finally {
       setVersturen(false);
+    }
+  }
+
+  async function verwijderAlleKandidaten() {
+    if (
+      !confirm(
+        `Weet je zeker dat je alle ${kandidaten.length} professionals uit de mailing wilt verwijderen? Dit kan niet ongedaan worden gemaakt.`
+      )
+    )
+      return;
+    setAlleVerwijderen(true);
+    setFout("");
+    setBericht("");
+    try {
+      await onVerwijderAlle();
+    } catch (err) {
+      setFout(err instanceof Error ? err.message : "Fout bij verwijderen");
+    } finally {
+      setAlleVerwijderen(false);
     }
   }
 
@@ -351,6 +372,19 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Bulkactie: alle professionals tegelijk verwijderen */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              {kandidaten.length} professional{kandidaten.length !== 1 ? "s" : ""} in de mailing
+            </span>
+            <button
+              onClick={verwijderAlleKandidaten}
+              disabled={alleVerwijderen}
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition disabled:opacity-50"
+            >
+              {alleVerwijderen ? "Verwijderen..." : "Verwijder alle"}
+            </button>
+          </div>
           {kandidaten.map((k) => (
             <div key={k.id} className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-purple-100 hover:bg-purple-50/30 transition">
               <div className="flex-1">

@@ -79,6 +79,15 @@ export default function DashboardPage() {
     }
   }
 
+  async function verwijderAlle() {
+    const res = await fetch("/api/kandidaten", { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Verwijderen mislukt");
+    }
+    setKandidaten([]);
+  }
+
   function onVerstuurd() {
     setKandidaten([]);
   }
@@ -183,6 +192,7 @@ export default function DashboardPage() {
             kandidaten={kandidaten}
             laden={laden}
             onVerwijder={verwijder}
+            onVerwijderAlle={verwijderAlle}
             onBijwerken={(bijgewerkt) =>
               setKandidaten((prev) =>
                 prev.map((k) => (k.id === bijgewerkt.id ? bijgewerkt : k))
