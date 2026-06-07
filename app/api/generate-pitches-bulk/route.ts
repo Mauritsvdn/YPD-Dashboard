@@ -68,7 +68,7 @@ Per kandidaat geef je exact dit JSON-object terug:
   "leeftijd": "leeftijd in hele jaren als getal indien vermeld (bijv '36'), anders lege string",
   "regio": "regio of stad zoals vermeld",
   "beschikbaarheid": "beschikbaarheid zoals vermeld (bijv '32 uur' of '24-32 uur per week')",
-  "salaris": "maandsalaris als getal (bijv '4500'); of bij een jaarsalaris de K-notatie (bijv '85K'); of de volledige tariefstring bij uurtarief (bijv '62,- excl. BTW per uur')",
+  "salaris": "maandsalaris als getal (bijv '4500'); of bij een jaarsalaris de K-notatie (bijv '85K'); of de volledige tariefstring bij uurtarief (bijv '62,- excl. BTW per uur'). Staat er geen concreet bedrag maar bijvoorbeeld 'in overleg', 'nader te bepalen' of 'n.t.b.' (ook bij 'tariefindicatie: in overleg'), neem die aanduiding dan letterlijk over (bijv 'in overleg'). Laat dit veld nooit leeg als er enige indicatie staat.",
   "type": "NN, IN of MB — exact zoals vermeld in het document",
   "functies": ["gewenste functie 1", "gewenste functie 2"],
   "werkervaring": ["werkervaring bullet 1", "werkervaring bullet 2"],
@@ -76,6 +76,8 @@ Per kandidaat geef je exact dit JSON-object terug:
   "bijzonderheden": "de bijzonderheden tekst zo volledig mogelijk",
   "categorie": "kies de meest passende uit: ${CATEGORIEEN.join(" | ")}"
 }
+
+Neem elke professional MAAR ÉÉN KEER op — geen dubbele kandidaten, ook niet als iemand meerdere keren in het document voorkomt.
 
 Geef ALLEEN een JSON-array terug met alle gevonden kandidaten. Geen andere tekst, geen uitleg, geen markdown.`;
 
@@ -181,6 +183,17 @@ export async function POST(request: Request) {
       const batchKandidaten = await extractKandidaten(batch);
       kandidaten = kandidaten.concat(batchKandidaten);
     }
+
+    // Vangnet: ontdubbel op genormaliseerde naam, zodat dezelfde professional
+    // niet twee keer in de mailing belandt (bv. bij overlap tussen batches).
+    const gezien = new Set<string>();
+    kandidaten = kandidaten.filter((k) => {
+      const sleutel = (k.neepnaam ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+      if (!sleutel) return true; // geen naam → niet te ontdubbelen, behouden
+      if (gezien.has(sleutel)) return false;
+      gezien.add(sleutel);
+      return true;
+    });
 
     if (!Array.isArray(kandidaten) || kandidaten.length === 0) {
       return NextResponse.json({ error: "Geen kandidaten gevonden in het document" }, { status: 422 });

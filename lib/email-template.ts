@@ -30,6 +30,11 @@ export function formatSalaris(salaris: string | null | undefined): string {
     if (n >= 12000) return `${Math.round(n / 1000)}K`;
     return `€${n.toLocaleString("nl-NL")},- bruto/maand`;
   }
+  // Tekstuele indicatie zonder bedrag (bv. "in overleg", "nader te bepalen")
+  // → letterlijk tonen met hoofdletter, géén euroteken ervoor.
+  if (!/\d/.test(trimmed)) {
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  }
   return trimmed.startsWith("€") ? trimmed : `€${trimmed}`;
 }
 
