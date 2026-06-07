@@ -6,6 +6,14 @@ import { nanoid } from "@/lib/nanoid";
 
 interface Props {
   onToevoegen: (kandidaten: Kandidaat[]) => void | Promise<void>;
+  // Kandidaten die al in de mailing staan — gebruikt om dubbele bij heruploaden
+  // automatisch over te slaan.
+  bestaande: Kandidaat[];
+}
+
+// Sleutel om te bepalen of een kandidaat al bestaat: genormaliseerde neepnaam.
+function kandidaatSleutel(k: { neepnaam: string }) {
+  return k.neepnaam.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 type Status = "idle" | "laden" | "review" | "opslaan" | "klaar" | "fout";
@@ -31,12 +39,14 @@ function missendeVelden(k: Kandidaat) {
   return checks.filter(([, gevuld]) => !gevuld).map(([label]) => label);
 }
 
-export default function BulkImport({ onToevoegen }: Props) {
+export default function BulkImport({ onToevoegen, bestaande }: Props) {
   const [bestand, setBestand] = useState<File | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [fout, setFout] = useState("");
   const [resultaat, setResultaat] = useState<{ aantal: number; categorieen: string[] } | null>(null);
   const [kandidaten, setKandidaten] = useState<Kandidaat[]>([]);
+  // Aantal kandidaten dat is overgeslagen omdat ze al in de mailing stonden.
+  const [overgeslagen, setOvergeslagen] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Blokkeer browser-navigatie terwijl verwerking bezig is
@@ -56,6 +66,7 @@ export default function BulkImport({ onToevoegen }: Props) {
     setFout("");
     setResultaat(null);
     setKandidaten([]);
+    setOvergeslagen(0);
 
     const form = new FormData();
     form.append("document", bestand);
@@ -69,7 +80,15 @@ export default function BulkImport({ onToevoegen }: Props) {
         (k: Omit<Kandidaat, "id">) => ({ ...k, id: nanoid() })
       );
 
-      setKandidaten(gevondenKandidaten);
+      // Filter kandidaten die al in de mailing staan automatisch weg, zodat bij
+      // heruploaden van het volledige document alleen de nieuwe overblijven.
+      const bestaandeSleutels = new Set(bestaande.map(kandidaatSleutel));
+      const nieuweKandidaten = gevondenKandidaten.filter(
+        (k) => !bestaandeSleutels.has(kandidaatSleutel(k))
+      );
+
+      setOvergeslagen(gevondenKandidaten.length - nieuweKandidaten.length);
+      setKandidaten(nieuweKandidaten);
       setStatus("review");
     } catch (err) {
       setFout(err instanceof Error ? err.message : "Er is een fout opgetreden.");
@@ -115,6 +134,7 @@ export default function BulkImport({ onToevoegen }: Props) {
     setFout("");
     setResultaat(null);
     setKandidaten([]);
+    setOvergeslagen(0);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -199,7 +219,10 @@ export default function BulkImport({ onToevoegen }: Props) {
             <div>
               <h3 className="font-bold text-gray-800">Controleer geïmporteerde kandidaten</h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                {kandidaten.length} kandidaat{kandidaten.length !== 1 ? "en" : ""} gevonden. Pas velden aan voordat je ze toevoegt.
+                {kandidaten.length} nieuwe kandidaat{kandidaten.length !== 1 ? "en" : ""} gevonden.
+                {overgeslagen > 0 && (
+                  <> {overgeslagen} stond{overgeslagen !== 1 ? "en" : ""} al in de mailing en {overgeslagen !== 1 ? "zijn" : "is"} overgeslagen.</>
+                )} Pas velden aan voordat je ze toevoegt.
               </p>
             </div>
             <button
@@ -218,8 +241,10 @@ export default function BulkImport({ onToevoegen }: Props) {
           )}
 
           {kandidaten.length === 0 ? (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-              Er staan geen kandidaten meer in de controlelijst.
+            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+              {overgeslagen > 0
+                ? "Alle kandidaten uit dit document staan al in de mailing — er is niets nieuws om toe te voegen."
+                : "Er staan geen kandidaten meer in de controlelijst."}
             </div>
           ) : (
             kandidaten.map((k, index) => {

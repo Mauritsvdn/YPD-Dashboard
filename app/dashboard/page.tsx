@@ -172,7 +172,7 @@ export default function DashboardPage() {
             </div>
 
             {kandidaatModus === "bulk" ? (
-              <BulkImport onToevoegen={voegVeelToe} />
+              <BulkImport onToevoegen={voegVeelToe} bestaande={kandidaten} />
             ) : (
               <NieuweKandidaat onToevoegen={voegToe} />
             )}
