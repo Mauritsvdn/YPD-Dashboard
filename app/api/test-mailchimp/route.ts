@@ -23,9 +23,11 @@ export async function POST(request: Request) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ypd-dashboard.vercel.app";
 
     // Door de recruiter ingestelde maand/jaar; valt terug op de huidige maand.
-    const maandJaar =
+    const maandJaarRuw =
       maandJaarInput?.trim() ||
       new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+    // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
+    const maandJaar = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
     const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;

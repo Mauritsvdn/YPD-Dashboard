@@ -64,9 +64,11 @@ export function generateMailchimpHtml(
   baseUrl: string,
   maandJaar?: string
 ): string {
-  const maandJaarLabel =
+  const maandJaarRuw =
     maandJaar?.trim() ||
     new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+  // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
+  const maandJaarLabel = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
   const jaar = new Date().getFullYear();
   const categorieenInMailing = Array.from(new Set(kandidaten.map((k) => k.categorie)));
 

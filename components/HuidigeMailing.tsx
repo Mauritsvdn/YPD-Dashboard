@@ -44,7 +44,8 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
   // maar de recruiter stelt deze altijd zelf in voordat verstuurd wordt.
   const [maand, setMaand] = useState(() => new Date().getMonth());
   const [jaar, setJaar] = useState(() => new Date().getFullYear());
-  const maandJaar = `${MAAND_NAMEN[maand]} ${jaar}`;
+  // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
+  const maandJaar = `${MAAND_NAMEN[maand].charAt(0).toUpperCase()}${MAAND_NAMEN[maand].slice(1)} ${jaar}`;
 
   const [versturen, setVersturen] = useState(false);
   const [bericht, setBericht] = useState("");
