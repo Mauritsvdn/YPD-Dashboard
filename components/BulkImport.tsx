@@ -219,7 +219,7 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
             <div>
               <h3 className="font-bold text-gray-800">Controleer geïmporteerde kandidaten</h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                {kandidaten.length} nieuwe kandidaat{kandidaten.length !== 1 ? "en" : ""} gevonden.
+                {kandidaten.length} nieuwe {kandidaten.length !== 1 ? "kandidaten" : "kandidaat"} gevonden.
                 {overgeslagen > 0 && (
                   <> {overgeslagen} stond{overgeslagen !== 1 ? "en" : ""} al in de mailing en {overgeslagen !== 1 ? "zijn" : "is"} overgeslagen.</>
                 )} Pas velden aan voordat je ze toevoegt.
@@ -317,15 +317,18 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
                     </label>
                     <label className="text-sm font-semibold text-gray-700">
                       Type
-                      <select
+                      <input
+                        list={`type-opties-${k.id}`}
                         value={k.type}
                         onChange={(e) => updateKandidaat(k.id, { type: e.target.value })}
+                        placeholder="NN, IN, MB of eigen type"
                         className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-                      >
+                      />
+                      <datalist id={`type-opties-${k.id}`}>
                         <option value="NN">NN</option>
                         <option value="IN">IN</option>
                         <option value="MB">MB</option>
-                      </select>
+                      </datalist>
                     </label>
                   </div>
 

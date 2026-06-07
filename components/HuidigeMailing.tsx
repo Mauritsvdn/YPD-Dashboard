@@ -244,7 +244,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
         <div>
           <h2 className="text-xl font-bold text-gray-800">Huidige mailing</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {maandJaar} &bull; {laden ? "laden..." : `${kandidaten.length} kandidaat${kandidaten.length !== 1 ? "en" : ""}`}
+            {maandJaar} &bull; {laden ? "laden..." : `${kandidaten.length} ${kandidaten.length !== 1 ? "kandidaten" : "kandidaat"}`}
           </p>
         </div>
         {!laden && kandidaten.length > 0 && (
@@ -497,15 +497,18 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
               </label>
               <label className="text-sm font-semibold text-gray-700">
                 Type
-                <select
+                <input
+                  list="type-opties-bewerken"
                   value={bewerken.type}
                   onChange={(e) => updateBewerken({ type: e.target.value })}
+                  placeholder="NN, IN, MB of eigen type"
                   className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
+                />
+                <datalist id="type-opties-bewerken">
                   <option value="NN">NN</option>
                   <option value="IN">IN</option>
                   <option value="MB">MB</option>
-                </select>
+                </datalist>
               </label>
             </div>
 
