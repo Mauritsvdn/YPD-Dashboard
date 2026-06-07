@@ -58,6 +58,22 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
   const [testVersturen, setTestVersturen] = useState(false);
   const [testBericht, setTestBericht] = useState("");
 
+  // Mailchimp-audience (naam + aantal subscribers) — getoond vóór verzenden als check
+  const [audience, setAudience] = useState<{ naam: string; aantal: number } | null>(null);
+
+  useEffect(() => {
+    let actief = true;
+    fetch("/api/mailchimp-audience")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (actief && data && !data.error) setAudience(data);
+      })
+      .catch(() => {});
+    return () => {
+      actief = false;
+    };
+  }, []);
+
   const previewRef = useRef<HTMLDivElement>(null);
   const previewBoxRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -118,7 +134,10 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
   }, [preview, previewHtml]);
 
   async function verstuurMailing() {
-    if (!confirm("Weet je zeker dat je de mailing naar de hele lijst wilt versturen?")) return;
+    const doelgroep = audience
+      ? `de audience "${audience.naam}" (${audience.aantal} subscribers)`
+      : "de hele lijst";
+    if (!confirm(`Weet je zeker dat je de mailing naar ${doelgroep} wilt versturen?`)) return;
     setVersturen(true);
     setFout("");
     setBericht("");
@@ -255,6 +274,18 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onBijwe
           />
           <span className="text-xs text-gray-500 ml-auto">
             Onderwerp: <span className="font-medium text-gray-700">Selectie onlangs gesproken professionals {maandJaar}</span>
+          </span>
+        </div>
+      )}
+
+      {/* Audience-check: naar wie gaat de mailing */}
+      {!laden && kandidaten.length > 0 && audience && (
+        <div className="mb-5 flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm">
+          <span aria-hidden>📋</span>
+          <span className="text-gray-600">Verstuurt naar audience</span>
+          <span className="font-semibold text-gray-800">{audience.naam}</span>
+          <span className="ml-auto px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">
+            {audience.aantal} subscribers
           </span>
         </div>
       )}
