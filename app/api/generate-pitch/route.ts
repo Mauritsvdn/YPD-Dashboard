@@ -37,11 +37,11 @@ export async function POST(request: Request) {
 
 Genereer een anonieme kandidaatpitch in EXACT dit format:
 
-Gebruik altijd een verzonnen Nederlandse voornaam (nooit de echte naam uit het CV). Noem geen echte bedrijfsnamen (alleen sector/branche). Geen enkele persoonlijk herleidbare informatie.
+Neem de naam over zoals die in het brondocument of de notities is opgegeven — de recruiter vult zelf de (fictieve) naam in. Verzin zelf GEEN nieuwe naam en vervang de opgegeven naam niet. Noem geen echte bedrijfsnamen (alleen sector/branche). Geen enkele overige persoonlijk herleidbare informatie.
 
 Geef ALLEEN een JSON-object terug zonder extra tekst, in dit exacte schema:
 {
-  "neepnaam": "Nederlandse voornaam",
+  "neepnaam": "de naam exact zoals opgegeven in het brondocument of de notities — 1-op-1 overnemen, niet zelf verzinnen of vervangen",
   "leeftijd": "VERPLICHT overnemen als leeftijd in hele jaren als getal, bijv '36'. Zoek actief naar leeftijd, 'jaar', geboortedatum, geboortejaar of datum van geboorte. Als alleen een geboortedatum staat, bereken de leeftijd in hele jaren op basis van vandaag. Alleen lege string als er echt geen leeftijd of geboortedatum in het CV of de notities staat.",
   "regio": "regio in Nederland",
   "beschikbaarheid": "aantal uren per week",

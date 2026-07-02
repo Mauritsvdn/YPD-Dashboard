@@ -68,7 +68,7 @@ Neem per kandidaat ALLE genoemde informatie volledig over. Vat niets samen en la
 
 Per kandidaat geef je exact dit JSON-object terug:
 {
-  "neepnaam": "de naam zoals in het document (als het een echte volledige naam is, vervang door een vergelijkbare fictieve Nederlandse voornaam)",
+  "neepnaam": "de naam exact zoals in het document — 1-op-1 overnemen. De recruiter heeft de fictieve naam al ingevuld, dus verzin zelf GEEN nieuwe naam en vervang de opgegeven naam niet",
   "leeftijd": "VERPLICHT overnemen als leeftijd in hele jaren als getal (bijv '36'). Zoek actief naar leeftijd, 'jaar', geboortedatum, geboortejaar of datum van geboorte. Als alleen een geboortedatum staat, bereken de leeftijd in hele jaren op basis van vandaag. Alleen lege string als er echt geen leeftijd of geboortedatum in het profiel staat.",
   "regio": "regio of stad zoals vermeld",
   "beschikbaarheid": "beschikbaarheid zoals vermeld (bijv '32 uur' of '24-32 uur per week')",

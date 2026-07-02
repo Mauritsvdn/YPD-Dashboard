@@ -7,7 +7,7 @@ import { nanoid } from "@/lib/nanoid";
 interface Props {
   onToevoegen: (kandidaten: Kandidaat[]) => void | Promise<void>;
   // Kandidaten die al in de mailing staan — gebruikt om dubbele bij heruploaden
-  // automatisch over te slaan.
+  // te markeren (niet meer automatisch over te slaan).
   bestaande: Kandidaat[];
 }
 
@@ -15,6 +15,10 @@ interface Props {
 function kandidaatSleutel(k: { neepnaam: string }) {
   return k.neepnaam.trim().toLowerCase().replace(/\s+/g, " ");
 }
+
+// Kandidaat in de review-stap, met markering of hij al in een vorige mailing
+// stond en of de recruiter hem in deze mailing wil behouden.
+type ReviewKandidaat = Kandidaat & { duplicaat: boolean; behouden: boolean };
 
 type Status = "idle" | "laden" | "review" | "opslaan" | "klaar" | "fout";
 
@@ -45,9 +49,7 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [fout, setFout] = useState("");
   const [resultaat, setResultaat] = useState<{ aantal: number; categorieen: string[] } | null>(null);
-  const [kandidaten, setKandidaten] = useState<Kandidaat[]>([]);
-  // Aantal kandidaten dat is overgeslagen omdat ze al in de mailing stonden.
-  const [overgeslagen, setOvergeslagen] = useState(0);
+  const [kandidaten, setKandidaten] = useState<ReviewKandidaat[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Blokkeer browser-navigatie terwijl verwerking bezig is
@@ -67,7 +69,6 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
     setFout("");
     setResultaat(null);
     setKandidaten([]);
-    setOvergeslagen(0);
 
     const form = new FormData();
     form.append("document", bestand);
@@ -81,15 +82,17 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
         (k: Omit<Kandidaat, "id">) => ({ ...k, id: nanoid() })
       );
 
-      // Filter kandidaten die al in de mailing staan automatisch weg, zodat bij
-      // heruploaden van het volledige document alleen de nieuwe overblijven.
+      // Markeer kandidaten die al in een vorige mailing stonden, maar filter ze
+      // niet meer weg. De recruiter ziet ze in de review-stap en kiest zelf per
+      // kandidaat of die (opnieuw) wordt toegevoegd. Bekende duplicaten staan
+      // standaard op "niet toevoegen".
       const bestaandeSleutels = new Set(bestaande.map(kandidaatSleutel));
-      const nieuweKandidaten = gevondenKandidaten.filter(
-        (k) => !bestaandeSleutels.has(kandidaatSleutel(k))
-      );
+      const reviewKandidaten: ReviewKandidaat[] = gevondenKandidaten.map((k) => {
+        const duplicaat = bestaandeSleutels.has(kandidaatSleutel(k));
+        return { ...k, duplicaat, behouden: !duplicaat };
+      });
 
-      setOvergeslagen(gevondenKandidaten.length - nieuweKandidaten.length);
-      setKandidaten(nieuweKandidaten);
+      setKandidaten(reviewKandidaten);
       setStatus("review");
     } catch (err) {
       setFout(err instanceof Error ? err.message : "Er is een fout opgetreden.");
@@ -98,13 +101,19 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
   }
 
   async function voegGecontroleerdeKandidatenToe() {
-    const opgeschoond = kandidaten.map((k) => ({
-      ...k,
-      leeftijd: (k.leeftijd ?? "").trim(),
-      functies: normaliseerRegels(k.functies),
-      werkervaring: normaliseerRegels(k.werkervaring),
-      opleidingen: normaliseerRegels(k.opleidingen),
-    }));
+    // Alleen kandidaten die de recruiter wil behouden gaan mee; de review-markering
+    // (duplicaat/behouden) wordt weer verwijderd zodat een schone Kandidaat overblijft.
+    const opgeschoond: Kandidaat[] = kandidaten
+      .filter((k) => k.behouden)
+      .map(({ duplicaat: _duplicaat, behouden: _behouden, ...k }) => ({
+        ...k,
+        leeftijd: (k.leeftijd ?? "").trim(),
+        functies: normaliseerRegels(k.functies),
+        werkervaring: normaliseerRegels(k.werkervaring),
+        opleidingen: normaliseerRegels(k.opleidingen),
+      }));
+
+    if (opgeschoond.length === 0) return;
 
     setStatus("opslaan");
     setFout("");
@@ -112,7 +121,6 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
       await onToevoegen(opgeschoond);
       const categorieen = Array.from(new Set(opgeschoond.map((k) => k.categorie)));
       setResultaat({ aantal: opgeschoond.length, categorieen });
-      setKandidaten(opgeschoond);
       setStatus("klaar");
     } catch (err) {
       setFout(err instanceof Error ? err.message : "Kandidaten konden niet worden opgeslagen.");
@@ -120,7 +128,7 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
     }
   }
 
-  function updateKandidaat(id: string, update: Partial<Kandidaat>) {
+  function updateKandidaat(id: string, update: Partial<ReviewKandidaat>) {
     setKandidaten((huidig) =>
       huidig.map((k) => (k.id === id ? { ...k, ...update } : k))
     );
@@ -136,9 +144,12 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
     setFout("");
     setResultaat(null);
     setKandidaten([]);
-    setOvergeslagen(0);
     if (fileRef.current) fileRef.current.value = "";
   }
+
+  const aantalGevonden = kandidaten.length;
+  const aantalDuplicaten = kandidaten.filter((k) => k.duplicaat).length;
+  const aantalTeVoegen = kandidaten.filter((k) => k.behouden).length;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -221,10 +232,10 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
             <div>
               <h3 className="font-bold text-gray-800">Controleer geïmporteerde kandidaten</h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                {kandidaten.length} nieuwe {kandidaten.length !== 1 ? "kandidaten" : "kandidaat"} gevonden.
-                {overgeslagen > 0 && (
-                  <> {overgeslagen} stond{overgeslagen !== 1 ? "en" : ""} al in de mailing en {overgeslagen !== 1 ? "zijn" : "is"} overgeslagen.</>
-                )} Pas velden aan voordat je ze toevoegt.
+                {aantalGevonden} {aantalGevonden !== 1 ? "kandidaten" : "kandidaat"} gevonden.
+                {aantalDuplicaten > 0 && (
+                  <> {aantalDuplicaten} stond{aantalDuplicaten !== 1 ? "en" : ""} al in een vorige mailing — zet hieronder zelf de toggle om als je {aantalDuplicaten !== 1 ? "die" : "die"} opnieuw wilt meesturen.</>
+                )} {aantalTeVoegen} word{aantalTeVoegen !== 1 ? "en" : "t"} toegevoegd.
               </p>
             </div>
             <button
@@ -244,26 +255,51 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
 
           {kandidaten.length === 0 ? (
             <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
-              {overgeslagen > 0
-                ? "Alle kandidaten uit dit document staan al in de mailing — er is niets nieuws om toe te voegen."
-                : "Er staan geen kandidaten meer in de controlelijst."}
+              Er staan geen kandidaten meer in de controlelijst.
             </div>
           ) : (
             kandidaten.map((k, index) => {
               const waarschuwingen = missendeVelden(k);
+              const overgeslagenDuplicaat = k.duplicaat && !k.behouden;
               return (
-                <div key={k.id} className="border border-gray-100 rounded-xl p-4 bg-gray-50/60">
+                <div
+                  key={k.id}
+                  className={`border rounded-xl p-4 transition ${
+                    overgeslagenDuplicaat
+                      ? "border-gray-200 bg-gray-100/70 opacity-70"
+                      : "border-gray-100 bg-gray-50/60"
+                  }`}
+                >
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                     <div>
                       <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Kandidaat {index + 1}</p>
                       <h4 className="font-bold text-gray-800 mt-0.5">{k.neepnaam || "Naam ontbreekt"}</h4>
+                      {k.duplicaat && (
+                        <span className="inline-block mt-1.5 text-xs font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-full">
+                          Stond ook in vorige mailing
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={() => verwijderKandidaat(k.id)}
-                      className="self-start text-xs text-red-400 hover:text-red-600 font-medium transition"
-                    >
-                      Verwijder uit import
-                    </button>
+                    {k.duplicaat ? (
+                      <label className="self-start inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={k.behouden}
+                          onChange={(e) => updateKandidaat(k.id, { behouden: e.target.checked })}
+                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-400"
+                        />
+                        <span className={`text-xs font-semibold ${k.behouden ? "text-purple-700" : "text-gray-500"}`}>
+                          {k.behouden ? "Behouden in deze mailing" : "Niet toevoegen"}
+                        </span>
+                      </label>
+                    ) : (
+                      <button
+                        onClick={() => verwijderKandidaat(k.id)}
+                        className="self-start text-xs text-red-400 hover:text-red-600 font-medium transition"
+                      >
+                        Verwijder uit import
+                      </button>
+                    )}
                   </div>
 
                   {waarschuwingen.length > 0 && (
@@ -389,11 +425,13 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
 
           <button
             onClick={voegGecontroleerdeKandidatenToe}
-            disabled={kandidaten.length === 0 || status === "opslaan"}
+            disabled={aantalTeVoegen === 0 || status === "opslaan"}
             className="w-full py-3 rounded-xl text-white font-semibold text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: "linear-gradient(90deg, #7B3FA0, #E8547A)" }}
           >
-            {status === "opslaan" ? "Kandidaten toevoegen..." : "Voeg gecontroleerde kandidaten toe aan mailing"}
+            {status === "opslaan"
+              ? "Kandidaten toevoegen..."
+              : `Voeg ${aantalTeVoegen} ${aantalTeVoegen !== 1 ? "kandidaten" : "kandidaat"} toe aan mailing`}
           </button>
         </div>
       )}
