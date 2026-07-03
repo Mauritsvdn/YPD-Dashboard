@@ -288,8 +288,11 @@ export default function BulkImport({ onToevoegen, bestaande }: Props) {
                           onChange={(e) => updateKandidaat(k.id, { behouden: e.target.checked })}
                           className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-400"
                         />
-                        <span className={`text-xs font-semibold ${k.behouden ? "text-purple-700" : "text-gray-500"}`}>
-                          {k.behouden ? "Behouden in deze mailing" : "Niet toevoegen"}
+                        <span className="text-xs font-semibold text-gray-700">
+                          Toevoegen aan deze mailing
+                          <span className={`ml-1.5 font-bold ${k.behouden ? "text-green-600" : "text-gray-400"}`}>
+                            {k.behouden ? "wél meegestuurd" : "niet meegestuurd"}
+                          </span>
                         </span>
                       </label>
                     ) : (
