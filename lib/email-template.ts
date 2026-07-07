@@ -42,9 +42,10 @@ export function formatSalaris(salaris: string | null | undefined): string {
     return `€${n.toLocaleString("nl-NL")},- bruto/maand`;
   }
   // Tekstuele indicatie zonder bedrag (bv. "in overleg", "nader te bepalen")
-  // → letterlijk tonen met hoofdletter, géén euroteken ervoor.
+  // → voorafgegaan door "Salaris" zodat het niet als los "In overleg" leest,
+  // géén euroteken ervoor. Bv. "in overleg" → "Salaris in overleg".
   if (!/\d/.test(trimmed)) {
-    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+    return `Salaris ${trimmed.charAt(0).toLowerCase() + trimmed.slice(1)}`;
   }
   return trimmed.startsWith("€") ? trimmed : `€${trimmed}`;
 }
