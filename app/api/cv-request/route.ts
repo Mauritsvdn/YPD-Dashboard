@@ -75,11 +75,30 @@ export async function POST(request: Request) {
 
 // ─── Interne notificatie → info@ypd.nl ────────────────────────────────────
 
+function conceptAntwoordMailto(
+  kandidaat: string,
+  naam: string,
+  aanvrager: string
+): string {
+  const onderwerp = `CV van ${kandidaat} – YPD`;
+  const body = `Beste ${naam},
+
+Bedankt voor uw interesse in ${kandidaat}. Hierbij stuur ik u graag het CV van deze professional.
+
+Mocht u naar aanleiding van het profiel vragen hebben of even willen sparren over de mogelijkheden, dan horen we dat uiteraard graag.
+
+Met vriendelijke groet,
+YPD`;
+
+  return `mailto:${encodeURIComponent(aanvrager)}?subject=${encodeURIComponent(onderwerp)}&amp;body=${encodeURIComponent(body)}`;
+}
+
 function interneNotificatieHtml(kandidaat: string, naam: string, aanvrager: string, telefoonnummer: string, bedrijf: string): string {
   const datum = new Date().toLocaleString("nl-NL", {
     weekday: "long", day: "numeric", month: "long",
     year: "numeric", hour: "2-digit", minute: "2-digit",
   });
+  const conceptMailto = conceptAntwoordMailto(kandidaat, naam, aanvrager);
 
   return emailShell(`
     <!-- Melding label -->
@@ -132,7 +151,7 @@ function interneNotificatieHtml(kandidaat: string, naam: string, aanvrager: stri
               <p style="margin:0 0 8px 0;">
                 <a href="tel:${telefoonnummer}" style="color:#7B3FA0;font-size:15px;font-weight:700;text-decoration:none;">📞 ${telefoonnummer}</a>
               </p>
-              <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
+              <a href="${conceptMailto}"
                  style="color:#888;font-size:13px;text-decoration:none;">Stuur een e-mail →</a>
             </td>
           </tr>
@@ -152,7 +171,7 @@ function interneNotificatieHtml(kandidaat: string, naam: string, aanvrager: stri
               </a>
             </td>
             <td style="padding-left:8px;">
-              <a href="mailto:${aanvrager}?subject=CV%20${encodeURIComponent(kandidaat)}&body=Beste%2C%0A%0ABedankt%20voor%20uw%20aanvraag%20voor%20het%20CV%20van%20${encodeURIComponent(kandidaat)}.%20Wij%20nemen%20zo%20spoedig%20mogelijk%20contact%20met%20u%20op.%0A%0AMet%20vriendelijke%20groet%2C%0AYPD"
+              <a href="${conceptMailto}"
                  style="display:block;text-align:center;background:#f3ecfa;color:#7B3FA0;text-decoration:none;padding:13px 20px;border-radius:25px;font-size:14px;font-weight:700;">
                 ✉️ Stuur e-mail
               </a>
