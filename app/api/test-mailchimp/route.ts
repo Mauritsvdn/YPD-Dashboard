@@ -4,10 +4,16 @@ import { Kandidaat } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
-    const { kandidaten, testEmail, maandJaar: maandJaarInput } = (await request.json()) as {
+    const {
+      kandidaten,
+      testEmail,
+      maandJaar: maandJaarInput,
+      mailingTitel: mailingTitelInput,
+    } = (await request.json()) as {
       kandidaten: Kandidaat[];
       testEmail: string;
       maandJaar?: string;
+      mailingTitel?: string;
     };
 
     if (!kandidaten || kandidaten.length === 0) {
@@ -43,7 +49,17 @@ export async function POST(request: Request) {
       hour12: false,
     }).format(new Date());
 
-    const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
+    const mailingTitel =
+      mailingTitelInput?.trim().replace(/[\r\n]+/g, " ") ||
+      "Selectie Beschikbare Professionals";
+
+    const html = generateMailchimpHtml(
+      kandidaten,
+      baseUrl,
+      maandJaar,
+      mailingTitel,
+      true
+    );
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {
@@ -59,7 +75,8 @@ export async function POST(request: Request) {
         type: "regular",
         recipients: { list_id: audienceId },
         settings: {
-          subject_line: `Selectie onlangs gesproken professionals ${maandJaar} — test ${testMoment}`,
+          title: `YPD automatische testmail ${testMoment}`,
+          subject_line: `${mailingTitel} ${maandJaar} — test ${testMoment}`,
           from_name: "YPD",
           reply_to: "info@ypd.nl",
           from_email: "info@ypd.nl",
@@ -102,11 +119,38 @@ export async function POST(request: Request) {
       throw new Error(`Testmail versturen mislukt: ${JSON.stringify(err)}`);
     }
 
-    // Verwijder de tijdelijke campagne zodat Mailchimp opgeruimd blijft
-    await fetch(`${baseMailchimp}/campaigns/${campaignId}`, {
-      method: "DELETE",
-      headers,
-    });
+    // Bewaar de huidige testcampagne: de categorie-links verwijzen naar de
+    // Mailchimp-browsercopy en moeten na ontvangst nog bereikbaar zijn.
+    // Ruim oudere automatische YPD-testcampagnes op, zodat er maximaal één blijft.
+    try {
+      const lijstRes = await fetch(
+        `${baseMailchimp}/campaigns?status=save&count=100`,
+        { headers }
+      );
+      if (lijstRes.ok) {
+        const lijst = (await lijstRes.json()) as {
+          campaigns?: Array<{
+            id: string;
+            settings?: { title?: string };
+          }>;
+        };
+        const oudeTests = (lijst.campaigns ?? []).filter(
+          (item) =>
+            item.id !== campaignId &&
+            item.settings?.title?.startsWith("YPD automatische testmail ")
+        );
+        await Promise.all(
+          oudeTests.map((item) =>
+            fetch(`${baseMailchimp}/campaigns/${item.id}`, {
+              method: "DELETE",
+              headers,
+            })
+          )
+        );
+      }
+    } catch (cleanupError) {
+      console.warn("Oude Mailchimp-testcampagnes opruimen mislukt:", cleanupError);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
