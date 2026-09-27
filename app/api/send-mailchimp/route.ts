@@ -5,9 +5,14 @@ import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const { kandidaten, maandJaar: maandJaarInput } = (await request.json()) as {
+    const {
+      kandidaten,
+      maandJaar: maandJaarInput,
+      mailingTitel: mailingTitelInput,
+    } = (await request.json()) as {
       kandidaten: Kandidaat[];
       maandJaar?: string;
+      mailingTitel?: string;
     };
 
     if (!kandidaten || kandidaten.length === 0) {
@@ -25,9 +30,18 @@ export async function POST(request: Request) {
       new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
     // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
     const maandJaar = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
-    const onderwerp = `Selectie onlangs gesproken professionals ${maandJaar}`;
+    const mailingTitel =
+      mailingTitelInput?.trim().replace(/[\r\n]+/g, " ") ||
+      "Selectie Beschikbare Professionals";
+    const onderwerp = `${mailingTitel} ${maandJaar}`;
 
-    const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
+    const html = generateMailchimpHtml(
+      kandidaten,
+      baseUrl,
+      maandJaar,
+      mailingTitel,
+      true
+    );
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {
