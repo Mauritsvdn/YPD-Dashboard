@@ -11,6 +11,8 @@ interface Props {
   onVerwijderAlle: () => void | Promise<void>;
   onBijwerken: (kandidaat: Kandidaat) => void;
   onVerstuurd: () => void;
+  mailingTitel: string;
+  onMailingTitelChange: (titel: string) => void;
 }
 
 const MAAND_NAMEN = [
@@ -38,7 +40,16 @@ function regelsNaarArray(waarde: string) {
   return waarde.split("\n");
 }
 
-export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwijderAlle, onBijwerken, onVerstuurd }: Props) {
+export default function HuidigeMailing({
+  kandidaten,
+  laden,
+  onVerwijder,
+  onVerwijderAlle,
+  onBijwerken,
+  onVerstuurd,
+  mailingTitel,
+  onMailingTitelChange,
+}: Props) {
   const [preview, setPreview] = useState(false);
   const [alleVerwijderen, setAlleVerwijderen] = useState(false);
 
@@ -114,7 +125,12 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
   let previewHtml = "";
   if (kandidaten.length > 0) {
     try {
-      previewHtml = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
+      previewHtml = generateMailchimpHtml(
+        kandidaten,
+        baseUrl,
+        maandJaar,
+        mailingTitel
+      );
     } catch {
       previewHtml = "<p style='padding:2rem;color:red'>Fout bij genereren preview.</p>";
     }
@@ -171,7 +187,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
       const res = await fetch("/api/send-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten, maandJaar }),
+        body: JSON.stringify({ kandidaten, maandJaar, mailingTitel }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -212,7 +228,7 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
       const res = await fetch("/api/test-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten, testEmail, maandJaar }),
+        body: JSON.stringify({ kandidaten, testEmail, maandJaar, mailingTitel }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -297,30 +313,46 @@ export default function HuidigeMailing({ kandidaten, laden, onVerwijder, onVerwi
         )}
       </div>
 
-      {/* Maand/jaar voor onderwerpregel + mailheader — altijd zelf in te stellen */}
+      {/* Titel + maand/jaar voor onderwerpregel en mailheader */}
       {!laden && kandidaten.length > 0 && (
-        <div className="mb-5 flex flex-wrap items-center gap-2 px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-xl">
-          <span className="text-sm font-semibold text-gray-700">Mailing voor:</span>
-          <select
-            value={maand}
-            onChange={(e) => setMaand(Number(e.target.value))}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
-          >
-            {MAAND_NAMEN.map((naam, i) => (
-              <option key={i} value={i}>{naam.charAt(0).toUpperCase() + naam.slice(1)}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={jaar}
-            onChange={(e) => setJaar(Number(e.target.value))}
-            min={2020}
-            max={2100}
-            className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
-          />
-          <span className="text-xs text-gray-500 ml-auto">
-            Onderwerp: <span className="font-medium text-gray-700">Selectie onlangs gesproken professionals {maandJaar}</span>
-          </span>
+        <div className="mb-5 space-y-3 px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-700">Mailingtitel</span>
+            <input
+              type="text"
+              value={mailingTitel}
+              onChange={(e) => onMailingTitelChange(e.target.value)}
+              maxLength={120}
+              placeholder="Bijv. Selectie Beschikbare Professionals"
+              className="mt-1.5 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-gray-700">Mailing voor:</span>
+            <select
+              value={maand}
+              onChange={(e) => setMaand(Number(e.target.value))}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              {MAAND_NAMEN.map((naam, i) => (
+                <option key={i} value={i}>{naam.charAt(0).toUpperCase() + naam.slice(1)}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              value={jaar}
+              onChange={(e) => setJaar(Number(e.target.value))}
+              min={2020}
+              max={2100}
+              className="w-24 px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            <span className="text-xs text-gray-500 ml-auto">
+              Onderwerp:{" "}
+              <span className="font-medium text-gray-700">
+                {(mailingTitel.trim() || "Selectie Beschikbare Professionals")} {maandJaar}
+              </span>
+            </span>
+          </div>
         </div>
       )}
 

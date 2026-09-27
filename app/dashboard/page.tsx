@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [actieveTab, setActieveTab] = useState<Tab>("kandidaat");
   const [kandidaatModus, setKandidaatModus] = useState<KandidaatModus>("bulk");
   const [bulkBezig, setBulkBezig] = useState(false);
+  const [mailingTitel, setMailingTitel] = useState("Selectie Beschikbare Professionals");
   const router = useRouter();
 
   useEffect(() => {
@@ -199,6 +200,8 @@ export default function DashboardPage() {
               )
             }
             onVerstuurd={onVerstuurd}
+            mailingTitel={mailingTitel}
+            onMailingTitelChange={setMailingTitel}
           />
         )}
         {actieveTab === "aanvragen" && (
