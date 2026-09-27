@@ -19,6 +19,9 @@ export default function DashboardPage() {
   const [kandidaatModus, setKandidaatModus] = useState<KandidaatModus>("bulk");
   const [bulkBezig, setBulkBezig] = useState(false);
   const [mailingTitel, setMailingTitel] = useState("Selectie Beschikbare Professionals");
+  const [introTekst, setIntroTekst] = useState(
+    "Een beknopte selectie van onlangs gesproken professionals van de afgelopen maand. Klik op een categorie om direct naar de profielen te gaan:"
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -202,6 +205,8 @@ export default function DashboardPage() {
             onVerstuurd={onVerstuurd}
             mailingTitel={mailingTitel}
             onMailingTitelChange={setMailingTitel}
+            introTekst={introTekst}
+            onIntroTekstChange={setIntroTekst}
           />
         )}
         {actieveTab === "aanvragen" && (
