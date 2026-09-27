@@ -9,10 +9,12 @@ export async function POST(request: Request) {
       kandidaten,
       maandJaar: maandJaarInput,
       mailingTitel: mailingTitelInput,
+      introTekst: introTekstInput,
     } = (await request.json()) as {
       kandidaten: Kandidaat[];
       maandJaar?: string;
       mailingTitel?: string;
+      introTekst?: string;
     };
 
     if (!kandidaten || kandidaten.length === 0) {
@@ -35,11 +37,14 @@ export async function POST(request: Request) {
       "Selectie Beschikbare Professionals";
     const onderwerp = `${mailingTitel} ${maandJaar}`;
 
+    const introTekst = introTekstInput?.trim();
+
     const html = generateMailchimpHtml(
       kandidaten,
       baseUrl,
       maandJaar,
       mailingTitel,
+      introTekst,
       true
     );
 
