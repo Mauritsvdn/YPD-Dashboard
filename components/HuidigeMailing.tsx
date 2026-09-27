@@ -13,6 +13,8 @@ interface Props {
   onVerstuurd: () => void;
   mailingTitel: string;
   onMailingTitelChange: (titel: string) => void;
+  introTekst: string;
+  onIntroTekstChange: (tekst: string) => void;
 }
 
 const MAAND_NAMEN = [
@@ -49,6 +51,8 @@ export default function HuidigeMailing({
   onVerstuurd,
   mailingTitel,
   onMailingTitelChange,
+  introTekst,
+  onIntroTekstChange,
 }: Props) {
   const [preview, setPreview] = useState(false);
   const [alleVerwijderen, setAlleVerwijderen] = useState(false);
@@ -129,7 +133,8 @@ export default function HuidigeMailing({
         kandidaten,
         baseUrl,
         maandJaar,
-        mailingTitel
+        mailingTitel,
+        introTekst
       );
     } catch {
       previewHtml = "<p style='padding:2rem;color:red'>Fout bij genereren preview.</p>";
@@ -187,7 +192,7 @@ export default function HuidigeMailing({
       const res = await fetch("/api/send-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten, maandJaar, mailingTitel }),
+        body: JSON.stringify({ kandidaten, maandJaar, mailingTitel, introTekst }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -228,7 +233,7 @@ export default function HuidigeMailing({
       const res = await fetch("/api/test-mailchimp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kandidaten, testEmail, maandJaar, mailingTitel }),
+        body: JSON.stringify({ kandidaten, testEmail, maandJaar, mailingTitel, introTekst }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
@@ -325,6 +330,17 @@ export default function HuidigeMailing({
               maxLength={120}
               placeholder="Bijv. Selectie Beschikbare Professionals"
               className="mt-1.5 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold text-gray-700">Introductietekst</span>
+            <textarea
+              value={introTekst}
+              onChange={(e) => onIntroTekstChange(e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="Tekst onder de header en boven de categorieën"
+              className="mt-1.5 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 resize-y"
             />
           </label>
           <div className="flex flex-wrap items-center gap-2">
