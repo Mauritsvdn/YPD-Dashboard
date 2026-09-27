@@ -28,6 +28,21 @@ export async function POST(request: Request) {
       new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
     // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
     const maandJaar = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
+
+    // Geef iedere testmail een uniek onderwerp. Gmail groepeert testmails met
+    // hetzelfde onderwerp en kan identieke kandidaatblokken dan achter "..." verbergen.
+    // De echte mailingroute wordt hierdoor niet geraakt.
+    const testMoment = new Intl.DateTimeFormat("nl-NL", {
+      timeZone: "Europe/Amsterdam",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(new Date());
+
     const html = generateMailchimpHtml(kandidaten, baseUrl, maandJaar);
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
@@ -44,7 +59,7 @@ export async function POST(request: Request) {
         type: "regular",
         recipients: { list_id: audienceId },
         settings: {
-          subject_line: `[TEST] Selectie onlangs gesproken professionals ${maandJaar}`,
+          subject_line: `Selectie onlangs gesproken professionals ${maandJaar} — test ${testMoment}`,
           from_name: "YPD",
           reply_to: "info@ypd.nl",
           from_email: "info@ypd.nl",
