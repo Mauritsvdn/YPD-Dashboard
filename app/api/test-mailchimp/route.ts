@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { generateMailchimpHtml } from "@/lib/email-template";
-import { Kandidaat } from "@/lib/types";
+import { bouwMailing, grootteWaarschuwing } from "@/lib/mailing";
+import type { Kandidaat } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
@@ -28,14 +28,15 @@ export async function POST(request: Request) {
     const apiKey = process.env.MAILCHIMP_API_KEY!;
     const server = process.env.MAILCHIMP_SERVER_PREFIX!;
     const audienceId = process.env.MAILCHIMP_AUDIENCE_ID!;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ypd-dashboard.vercel.app";
-
-    // Door de recruiter ingestelde maand/jaar; valt terug op de huidige maand.
-    const maandJaarRuw =
-      maandJaarInput?.trim() ||
-      new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
-    // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
-    const maandJaar = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
+    // Exact dezelfde HTML-opbouw als de echte mailing (zie lib/mailing.ts).
+    const mailing = bouwMailing({
+      kandidaten,
+      maandJaar: maandJaarInput,
+      mailingTitel: mailingTitelInput,
+      introTekst: introTekstInput,
+    });
+    const { html, maandJaar, mailingTitel } = mailing;
+    const waarschuwing = grootteWaarschuwing(mailing);
 
     // Geef iedere testmail een uniek onderwerp. Gmail groepeert testmails met
     // hetzelfde onderwerp en kan identieke kandidaatblokken dan achter "..." verbergen.
@@ -50,21 +51,6 @@ export async function POST(request: Request) {
       second: "2-digit",
       hour12: false,
     }).format(new Date());
-
-    const mailingTitel =
-      mailingTitelInput?.trim().replace(/[\r\n]+/g, " ") ||
-      "Selectie Beschikbare Professionals";
-
-    const introTekst = introTekstInput?.trim();
-
-    const html = generateMailchimpHtml(
-      kandidaten,
-      baseUrl,
-      maandJaar,
-      mailingTitel,
-      introTekst,
-      true
-    );
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {
@@ -157,7 +143,12 @@ export async function POST(request: Request) {
       console.warn("Oude Mailchimp-testcampagnes opruimen mislukt:", cleanupError);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      htmlHash: mailing.htmlHash,
+      htmlBytes: mailing.htmlBytes,
+      waarschuwing,
+    });
   } catch (err) {
     console.error("test-mailchimp fout:", err);
     return NextResponse.json(

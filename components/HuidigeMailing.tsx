@@ -237,7 +237,10 @@ export default function HuidigeMailing({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Fout bij versturen");
-      setTestBericht(`✓ Testmail verstuurd naar ${testEmail}`);
+      setTestBericht(
+        `✓ Testmail verstuurd naar ${testEmail}` +
+          (data.waarschuwing ? ` — Let op: ${data.waarschuwing}` : "")
+      );
       setTestModus(false);
       setTestEmail("");
     } catch (err) {

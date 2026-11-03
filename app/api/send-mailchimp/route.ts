@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { generateMailchimpHtml } from "@/lib/email-template";
-import { Kandidaat } from "@/lib/types";
+import { bouwMailing, grootteWaarschuwing } from "@/lib/mailing";
+import type { Kandidaat } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
@@ -24,29 +24,21 @@ export async function POST(request: Request) {
     const apiKey = process.env.MAILCHIMP_API_KEY!;
     const server = process.env.MAILCHIMP_SERVER_PREFIX!;
     const audienceId = process.env.MAILCHIMP_AUDIENCE_ID!;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ypd-dashboard.vercel.app";
-
-    // Door de recruiter ingestelde maand/jaar; valt terug op de huidige maand.
-    const maandJaarRuw =
-      maandJaarInput?.trim() ||
-      new Date().toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
-    // Maandnaam altijd met hoofdletter, bv. "Mei 2026".
-    const maandJaar = maandJaarRuw.charAt(0).toUpperCase() + maandJaarRuw.slice(1);
-    const mailingTitel =
-      mailingTitelInput?.trim().replace(/[\r\n]+/g, " ") ||
-      "Selectie Beschikbare Professionals";
-    const onderwerp = `${mailingTitel} ${maandJaar}`;
-
-    const introTekst = introTekstInput?.trim();
-
-    const html = generateMailchimpHtml(
+    // Exact dezelfde HTML-opbouw als de testmail (zie lib/mailing.ts).
+    const mailing = bouwMailing({
       kandidaten,
-      baseUrl,
-      maandJaar,
-      mailingTitel,
-      introTekst,
-      true
-    );
+      maandJaar: maandJaarInput,
+      mailingTitel: mailingTitelInput,
+      introTekst: introTekstInput,
+    });
+    const { html, onderwerp } = mailing;
+
+    // Voorkom dat Gmail de echte mailing afknipt: dan zijn onderste kandidaten en de
+    // uitschrijflink onzichtbaar. Liever niet versturen dan een kapotte mail.
+    const waarschuwing = grootteWaarschuwing(mailing);
+    if (waarschuwing) {
+      return NextResponse.json({ error: waarschuwing }, { status: 413 });
+    }
 
     const baseMailchimp = `https://${server}.api.mailchimp.com/3.0`;
     const headers = {
@@ -105,7 +97,7 @@ export async function POST(request: Request) {
       .update({ verstuurd_op: new Date().toISOString() })
       .in("id", ids);
 
-    return NextResponse.json({ ok: true, campaignId, onderwerp });
+    return NextResponse.json({ ok: true, campaignId, onderwerp, htmlHash: mailing.htmlHash });
   } catch (err) {
     console.error("send-mailchimp fout:", err);
     return NextResponse.json(
