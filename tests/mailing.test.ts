@@ -53,6 +53,21 @@ describe("kleurverlopen hebben een effen fallback", () => {
     }
   });
 
+  test("klassiek Outlook krijgt het huisstijlverloop als VML in kopbalk en kleurstrip", () => {
+    assert.match(html, /<html[^>]*xmlns:v="urn:schemas-microsoft-com:vml"/);
+    const vml = html.match(/<!--\[if gte mso 9\]><v:rect[\s\S]*?<!\[endif\]-->/g) ?? [];
+    assert.equal(vml.length, 2, "verwacht VML voor kleurstrip en kopbalk");
+    for (const blok of vml) assert.match(blok, /<v:fill type="gradient" color="#[0-9a-fA-F]{6}" color2="#[0-9a-fA-F]{6}" colors="0 #/);
+    assert.match(html, /colors="0 #5e2880;\.55 #c03d68;1 #c86020"/);
+    // Ieder geopend VML-vlak wordt ook weer gesloten, buiten zicht van andere clients.
+    assert.equal((html.match(/<v:rect /g) ?? []).length, (html.match(/<\/v:rect>/g) ?? []).length);
+    assert.equal((html.match(/<v:textbox /g) ?? []).length, (html.match(/<\/v:textbox>/g) ?? []).length);
+    assert.equal((html.match(/<!--\[if/g) ?? []).length, (html.match(/<!\[endif\]-->/g) ?? []).length);
+    // Buiten de MSO-conditionals staat geen VML (Gmail e.d. zien het nooit).
+    const zonderMso = html.replace(/<!--\[if gte mso 9\]>[\s\S]*?<!\[endif\]-->/g, "");
+    assert.doesNotMatch(zonderMso, /<\/?v:/);
+  });
+
   test("hero: effen paarse achtergrond en inline witte titel", () => {
     const [hero] = tagsMetClass(body, "y-hero");
     assert.ok(hero, "hero-cel ontbreekt");
